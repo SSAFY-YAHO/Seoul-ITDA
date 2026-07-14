@@ -1,6 +1,6 @@
 <script setup>
-import { computed, onMounted, ref, watch } from "vue";
-import { useRoute, useRouter } from "vue-router";
+import { computed, onMounted, ref } from "vue";
+import { useRouter } from "vue-router";
 import FestivalCalendar from "../components/festival/FestivalCalendar.vue";
 import FestivalDetailModal from "../components/festival/FestivalDetailModal.vue";
 import FestivalFilter from "../components/festival/FestivalFilter.vue";
@@ -11,7 +11,6 @@ import {
 } from "../utils/festivalDate.js";
 import brandMark from "../assets/mascot.png";
 
-const route = useRoute();
 const router = useRouter();
 
 const loading = ref(true);
@@ -161,22 +160,8 @@ function resetFilters() {
   loadFestivals();
 }
 
-watch(currentMonth, (value) => {
-  const target = value.toISOString().slice(0, 10);
-  if (route.query?.month !== target) {
-    router.replace({ query: { ...route.query, month: target } });
-  }
-});
-
 onMounted(() => {
   loadFestivals();
-  const monthQuery = route.query?.month;
-  if (monthQuery) {
-    const parsed = new Date(monthQuery);
-    if (!Number.isNaN(parsed.getTime())) {
-      currentMonth.value = parsed;
-    }
-  }
 });
 
 </script>

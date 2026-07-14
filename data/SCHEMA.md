@@ -58,6 +58,8 @@
 | `cpyrhtDivCd` | string | 저작권 구분 코드 |
 | `createdtime` | string | 최초 등록 시각 (YYYYMMDDHHmmss) |
 | `modifiedtime` | string | 최종 수정 시각 (YYYYMMDDHHmmss) |
+| `eventstartdate` | string | 행사 시작일 (YYYYMMDD, 축제 데이터에 한함) |
+| `eventenddate` | string | 행사 종료일 (YYYYMMDD, 축제 데이터에 한함) |
 
 ---
 
