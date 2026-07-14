@@ -182,19 +182,23 @@
 ### Request Body
 ```json
 {
-  "file_path": "data/seoul_places.json"
+  "file_path": "data"
 }
 ```
+
+- `file_path` 미지정 시 `.env`의 `SEOUL_DATA_PATH`(기본값 `data`)를 사용합니다.
+- `data` 디렉토리를 지정하면 `서울_*.json` 파일들을 일괄 적재합니다.
 
 ### Success Response
 - Status: `200 OK`
 ```json
 {
-  "message": "Seoul data load completed",
-  "loaded": 3,
+  "message": "Seoul TourAPI data load completed",
+  "loaded": 6518,
   "updated": 0,
   "skipped": 0,
-  "file_path": "C:\\path\\to\\data\\seoul_places.json"
+  "processed_files": 7,
+  "file_path": "C:\\path\\to\\data"
 }
 ```
 

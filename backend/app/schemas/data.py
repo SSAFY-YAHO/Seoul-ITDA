@@ -12,4 +12,5 @@ class DataLoadResponse(BaseModel):
     loaded: int
     updated: int
     skipped: int
+    processed_files: int
     file_path: str

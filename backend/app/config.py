@@ -19,7 +19,7 @@ class Settings:
     app_host: str = os.getenv('APP_HOST', '0.0.0.0')
     app_port: int = int(os.getenv('APP_PORT', '8000'))
     database_url: str = os.getenv('DATABASE_URL', 'sqlite:///./backend/localhub.db')
-    seoul_data_path: str = os.getenv('SEOUL_DATA_PATH', 'data/seoul_places.json')
+    seoul_data_path: str = os.getenv('SEOUL_DATA_PATH', 'data')
     openai_api_key: str = os.getenv('OPENAI_API_KEY', '')
     openai_model: str = os.getenv('OPENAI_MODEL', 'gpt-4o-mini')
     openai_timeout_sec: int = int(os.getenv('OPENAI_TIMEOUT_SEC', '15'))
