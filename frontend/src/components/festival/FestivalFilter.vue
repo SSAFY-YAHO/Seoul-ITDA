@@ -1,10 +1,9 @@
 <script setup>
 const props = defineProps({
   filters: Object,
-  viewMode: String,
 });
 
-const emit = defineEmits(["update:filters", "update:viewMode", "reset", "apply"]);
+const emit = defineEmits(["update:filters", "reset", "apply"]);
 
 function updateFilter(key, value) {
   emit("update:filters", { ...props.filters, [key]: value });
@@ -82,22 +81,6 @@ function updateFilter(key, value) {
           @click="emit('apply')"
         >
           검색 적용
-        </button>
-        <button
-          class="btn btn--secondary btn--small"
-          type="button"
-          :class="{ 'is-active': viewMode === 'calendar' }"
-          @click="emit('update:viewMode', 'calendar')"
-        >
-          달력
-        </button>
-        <button
-          class="btn btn--secondary btn--small"
-          type="button"
-          :class="{ 'is-active': viewMode === 'list' }"
-          @click="emit('update:viewMode', 'list')"
-        >
-          목록
         </button>
       </div>
     </div>

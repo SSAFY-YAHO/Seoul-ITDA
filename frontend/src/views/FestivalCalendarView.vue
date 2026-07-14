@@ -19,7 +19,6 @@ const error = ref("");
 const festivalItems = ref([]);
 const festivalTotal = ref(0);
 const selectedFestival = ref(null);
-const viewMode = ref("calendar");
 const filters = ref({
   keyword: "",
   status: "",
@@ -27,10 +26,6 @@ const filters = ref({
   endDate: "",
 });
 const currentMonth = ref(new Date());
-
-const hasDatedFestivals = computed(() =>
-  filteredFestivals.value.some((festival) => Boolean(parseFestivalDateRange(festival))),
-);
 
 function getFestivalStatus(item) {
   const parsed = parseFestivalDateRange(item);
@@ -54,8 +49,24 @@ const visibleEvents = computed(() =>
     .filter(Boolean),
 );
 
-const featuredFestivals = computed(() => {
-  const sorted = [...filteredFestivals.value].sort((a, b) => {
+const monthlyFestivals = computed(() => {
+  const monthStart = new Date(
+    currentMonth.value.getFullYear(),
+    currentMonth.value.getMonth(),
+    1,
+  );
+  const nextMonth = new Date(
+    currentMonth.value.getFullYear(),
+    currentMonth.value.getMonth() + 1,
+    1,
+  );
+
+  return filteredFestivals.value
+    .filter((festival) => {
+      const range = parseFestivalDateRange(festival);
+      return range && range.start < nextMonth && range.end > monthStart;
+    })
+    .sort((a, b) => {
     const aDate = parseFestivalDateRange(a)?.start;
     const bDate = parseFestivalDateRange(b)?.start;
 
@@ -66,14 +77,22 @@ const featuredFestivals = computed(() => {
     if (bDate) return 1;
 
     return String(a.title || a.name || "").localeCompare(String(b.title || b.name || ""), "ko");
-  });
-  return sorted.slice(0, 5);
+    });
 });
+
+const currentMonthLabel = computed(() =>
+  currentMonth.value.toLocaleDateString("ko-KR", {
+    year: "numeric",
+    month: "long",
+  }),
+);
 
 function formatPeriod(item) {
   const parsed = parseFestivalDateRange(item);
   if (!parsed) return "기간 정보 미정";
-  return `${parsed.start.toLocaleDateString("ko-KR", { month: "short", day: "numeric" })} ~ ${parsed.end.toLocaleDateString("ko-KR", { month: "short", day: "numeric" })}`;
+  const inclusiveEnd = new Date(parsed.end);
+  inclusiveEnd.setDate(inclusiveEnd.getDate() - 1);
+  return `${parsed.start.toLocaleDateString("ko-KR", { month: "short", day: "numeric" })} ~ ${inclusiveEnd.toLocaleDateString("ko-KR", { month: "short", day: "numeric" })}`;
 }
 
 function openFestival(festival) {
@@ -128,6 +147,10 @@ function changeMonth(step) {
   currentMonth.value = nextMonth;
 }
 
+function syncCurrentMonth(date) {
+  currentMonth.value = new Date(date.getFullYear(), date.getMonth(), 1);
+}
+
 function resetFilters() {
   filters.value = {
     keyword: "",
@@ -156,15 +179,6 @@ onMounted(() => {
   }
 });
 
-watch(
-  [loading, hasDatedFestivals],
-  ([isLoading, hasDates]) => {
-    if (!isLoading && !hasDates) {
-      viewMode.value = "list";
-    }
-  },
-  { immediate: true },
-);
 </script>
 
 <template>
@@ -197,14 +211,12 @@ watch(
 
     <FestivalFilter
       :filters="filters"
-      :view-mode="viewMode"
       @update:filters="filters = $event"
-      @update:viewMode="viewMode = $event"
       @apply="loadFestivals"
       @reset="resetFilters"
     />
 
-    <section v-if="viewMode !== 'list'" class="section-card section-block">
+    <section class="section-card section-block">
       <div class="section-heading">
         <div>
           <p class="section-label">캘린더</p>
@@ -244,85 +256,49 @@ watch(
         <strong>축제 정보를 불러오지 못했습니다.</strong>
         <p>{{ error }}</p>
       </div>
-      <div v-else>
-        <div v-if="filteredFestivals.length > 0 && !hasDatedFestivals" class="empty-state">
-          <strong>축제 목록은 준비되었지만 일정 원본은 제공되지 않았습니다.</strong>
-          <p>현재 데이터에는 시작일과 종료일이 없어 목록 보기로 자동 전환했습니다.</p>
-        </div>
+      <div v-else class="festival-calendar-layout">
         <FestivalCalendar
           :events="visibleEvents"
           :loading="loading"
           :error="error"
           :initial-date="currentMonth.toISOString().slice(0, 10)"
-          @event-click="
-            (event) => openFestival(event.extendedProps.originalData)
-          "
+          @event-click="(event) => openFestival(event.extendedProps.originalData)"
+          @month-change="syncCurrentMonth"
           @date-click="() => {}"
         />
-      </div>
-    </section>
 
-    <section v-if="viewMode !== 'calendar'" class="section-card section-block festival-list-section">
-      <div class="section-heading">
-        <div>
-          <p class="section-label">축제 목록</p>
-          <h2>선택한 조건의 축제</h2>
-        </div>
-      </div>
+        <aside class="festival-monthly-panel">
+          <div class="festival-monthly-panel__header">
+            <p class="section-label">월별 축제</p>
+            <h3>{{ currentMonthLabel }}</h3>
+            <p class="helper-text">이 달에 진행되는 축제 {{ monthlyFestivals.length }}건</p>
+          </div>
 
-      <div v-if="filteredFestivals.length === 0" class="empty-state">
-        <strong>조건에 맞는 축제가 없습니다.</strong>
-        <p>다른 검색어나 필터로 다시 확인해 주세요.</p>
-      </div>
-      <div v-else class="card-list card-list--stacked">
-        <article
-          v-for="festival in featuredFestivals"
-          :key="festival.id || festival.title"
-          class="location-card festival-item"
-          @click="openFestival(festival)"
-        >
-          <div class="festival-item__head">
-            <div>
-              <span class="badge badge--yellow">{{
-                festival.category || "축제"
+          <div v-if="monthlyFestivals.length === 0" class="empty-state">
+            <strong>이 달에 진행되는 축제가 없습니다.</strong>
+            <p>다른 달로 이동해 일정을 확인해 주세요.</p>
+          </div>
+          <div v-else class="festival-monthly-list">
+            <button
+              v-for="festival in monthlyFestivals"
+              :key="festival.id || festival.title || festival.name"
+              class="festival-monthly-item"
+              type="button"
+              @click="openFestival(festival)"
+            >
+              <span class="badge badge--orange">{{
+                getFestivalStatus(festival) === "upcoming"
+                  ? "예정"
+                  : getFestivalStatus(festival) === "ongoing"
+                    ? "진행 중"
+                    : "종료"
               }}</span>
-              <h3>
-                {{
-                  festival.title ||
-                  festival.name ||
-                  festival.festivalName ||
-                  "축제"
-                }}
-              </h3>
-            </div>
-            <span class="badge badge--orange">{{
-              getFestivalStatus(festival) === "upcoming"
-                ? "예정"
-                : getFestivalStatus(festival) === "ongoing"
-                  ? "진행 중"
-                  : getFestivalStatus(festival) === "unknown"
-                    ? "일정 미정"
-                  : "종료"
-            }}</span>
+              <strong>{{ festival.title || festival.name || festival.festivalName || "축제" }}</strong>
+              <span>{{ formatPeriod(festival) }}</span>
+              <small>{{ festival.place || festival.venue || festival.location || "장소 미정" }}</small>
+            </button>
           </div>
-          <p>
-            {{
-              festival.description ||
-              festival.summary ||
-              festival.content ||
-              "설명이 제공되지 않았습니다."
-            }}
-          </p>
-          <div class="meta-row">
-            <span>{{ formatPeriod(festival) }}</span>
-            <strong>{{
-              festival.place ||
-              festival.venue ||
-              festival.location ||
-              "장소 미정"
-            }}</strong>
-          </div>
-        </article>
+        </aside>
       </div>
     </section>
 
