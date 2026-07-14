@@ -29,3 +29,16 @@
 - 검증
   - 전체 목록 응답(`total=2`) 확인
   - 키워드 `한강` 검색 응답(`total=1`) 확인
+
+### API: GET /api/posts/{post_id}
+- 구현 파일
+  - `backend/app/routers/posts.py`
+  - `backend/app/services/post_service.py`
+  - `docs/backend/api.md`
+- 작업 내용
+  - 게시글 상세 조회 API 추가
+  - 상세 조회 시 조회수 1 증가 로직 반영
+  - 미존재 게시글 요청 시 404 처리
+- 검증
+  - 동일 게시글 2회 조회 시 `views`가 1씩 증가하는지 확인
+  - 없는 ID 조회 시 404 응답 확인

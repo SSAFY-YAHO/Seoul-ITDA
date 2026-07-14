@@ -30,3 +30,17 @@ def list_posts(db: Session, query: str | None = None) -> list[Post]:
             )
         )
     return statement.order_by(Post.created_at.desc()).all()
+
+
+def get_post_or_none(db: Session, post_id: int) -> Post | None:
+    return db.query(Post).filter(Post.id == post_id).first()
+
+
+def get_post_and_increase_views(db: Session, post_id: int) -> Post | None:
+    post = get_post_or_none(db, post_id)
+    if post is None:
+        return None
+    post.views += 1
+    db.commit()
+    db.refresh(post)
+    return post

@@ -57,3 +57,32 @@
   "total": 1
 }
 ```
+
+## 3) Get Post Detail
+- Method: `GET`
+- Path: `/api/posts/{post_id}`
+- Description: 게시글 상세를 조회하고 조회수를 1 증가시킵니다.
+
+### Path Parameters
+- `post_id`: 게시글 ID
+
+### Success Response
+- Status: `200 OK`
+```json
+{
+  "id": 2,
+  "title": "한강 산책",
+  "content": "저녁 코스 추천",
+  "views": 1,
+  "created_at": "2026-07-14T10:00:00",
+  "updated_at": "2026-07-14T10:00:00"
+}
+```
+
+### Error Response
+- Status: `404 Not Found`
+```json
+{
+  "detail": "Post not found"
+}
+```
