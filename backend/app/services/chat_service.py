@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 import urllib.error
 import urllib.request
 from dataclasses import dataclass
@@ -20,12 +21,73 @@ class ChatResult:
     fallback: bool
 
 
+PARTICLE_SUFFIXES = (
+    '에서',
+    '으로',
+    '에게',
+    '까지',
+    '부터',
+    '처럼',
+    '보다',
+    '라도',
+    '이라도',
+    '이면',
+    '면',
+    '은',
+    '는',
+    '이',
+    '가',
+    '을',
+    '를',
+    '에',
+    '의',
+    '도',
+    '와',
+    '과',
+    '좀',
+)
+
+
+def _normalize_keyword(token: str) -> str:
+    normalized = re.sub(r'[^0-9A-Za-z가-힣]', '', token.strip().lower())
+    if not normalized:
+        return ''
+
+    for suffix in PARTICLE_SUFFIXES:
+        if normalized.endswith(suffix) and len(normalized) - len(suffix) >= 2:
+            normalized = normalized[: -len(suffix)]
+            break
+
+    return normalized
+
+
 def _extract_keywords(question: str) -> list[str]:
-    raw_parts = [part.strip() for part in question.replace(',', ' ').replace('/', ' ').split()]
-    keywords = [part for part in raw_parts if len(part) >= 2]
+    raw_parts = re.split(r'[\s,/?.!]+', question)
+    keywords: list[str] = []
+
+    for part in raw_parts:
+        normalized = _normalize_keyword(part)
+        if len(normalized) >= 2 and normalized not in keywords:
+            keywords.append(normalized)
+
     if not keywords:
-        return [question.strip()] if question.strip() else []
+        normalized_question = _normalize_keyword(question)
+        return [normalized_question] if normalized_question else []
+
     return keywords[:5]
+
+
+def _score_text_match(keyword: str, *fields: str) -> int:
+    score = 0
+    for field in fields:
+        if not field:
+            continue
+        lowered = field.lower()
+        if keyword == lowered:
+            score += 5
+        elif keyword in lowered:
+            score += 2
+    return score
 
 
 def _find_relevant_attractions(db: Session, question: str, limit: int = 3) -> list[Attraction]:
@@ -40,18 +102,36 @@ def _find_relevant_attractions(db: Session, question: str, limit: int = 3) -> li
             [
                 Attraction.name.like(like_query),
                 Attraction.description.like(like_query),
+                Attraction.address.like(like_query),
                 Attraction.category.like(like_query),
                 Attraction.district.like(like_query),
                 Attraction.tags.like(like_query),
             ]
         )
 
-    return (
+    candidates = (
         db.query(Attraction)
         .filter(or_(*conditions))
-        .limit(limit)
+        .limit(30)
         .all()
     )
+
+    def attraction_score(attraction: Attraction) -> tuple[int, str]:
+        total = 0
+        for keyword in keywords:
+            total += _score_text_match(
+                keyword,
+                attraction.name,
+                attraction.address,
+                attraction.district,
+                attraction.category,
+                attraction.tags,
+                attraction.description,
+            )
+        return total, attraction.name
+
+    ranked = sorted(candidates, key=attraction_score, reverse=True)
+    return ranked[:limit]
 
 
 def _find_relevant_posts(db: Session, question: str, limit: int = 3) -> list[Post]:
@@ -64,13 +144,22 @@ def _find_relevant_posts(db: Session, question: str, limit: int = 3) -> list[Pos
         like_query = f'%{keyword}%'
         conditions.extend([Post.title.like(like_query), Post.content.like(like_query)])
 
-    return (
+    candidates = (
         db.query(Post)
         .filter(or_(*conditions))
         .order_by(Post.created_at.desc())
-        .limit(limit)
+        .limit(20)
         .all()
     )
+
+    def post_score(post: Post) -> tuple[int, str]:
+        total = 0
+        for keyword in keywords:
+            total += _score_text_match(keyword, post.title, post.content)
+        return total, post.title
+
+    ranked = sorted(candidates, key=post_score, reverse=True)
+    return ranked[:limit]
 
 
 def _build_context_lines(attractions: list[Attraction], posts: list[Post]) -> list[str]:
@@ -87,20 +176,26 @@ def _build_context_lines(attractions: list[Attraction], posts: list[Post]) -> li
 def _local_answer(question: str, attractions: list[Attraction], posts: list[Post]) -> str:
     if not attractions and not posts:
         return (
-            '질문과 직접 매칭되는 서울 관광 데이터나 커뮤니티 글을 찾지 못했습니다. '
-            '질문 키워드를 더 구체적으로 입력해 주세요.'
+            '질문과 바로 연결되는 장소를 찾지 못했습니다. '
+            '지역명이나 목적을 같이 적어주면 더 정확해집니다. 예: 성수동 카페, 비 오는 날 실내 데이트, 이번 달 축제'
         )
 
     parts: list[str] = []
     if attractions:
-        parts.append('관광 데이터 기준 추천:')
+        parts.append('질문과 가까운 서울 장소를 찾았습니다:')
         for attraction in attractions:
-            parts.append(f"- {attraction.name} ({attraction.category}, {attraction.district})")
+            description = attraction.description.split(' / ')[0].strip() if attraction.description else ''
+            summary_bits = [attraction.category, attraction.district]
+            if description and description != attraction.address:
+                summary_bits.append(description)
+            parts.append(
+                f"- {attraction.name} | {' · '.join(bit for bit in summary_bits if bit)} | {attraction.address}"
+            )
     if posts:
-        parts.append('커뮤니티 참고 글:')
+        parts.append('함께 참고할 커뮤니티 글도 있습니다:')
         for post in posts:
             parts.append(f"- {post.title}")
-    parts.append('위 내용은 현재 저장된 서울 데이터와 커뮤니티 DB를 기반으로 정리했습니다.')
+    parts.append('원하면 위 후보 중에서 실내 위주, 산책 위주, 축제 위주처럼 다시 좁혀드릴 수 있습니다.')
     return '\n'.join(parts)
 
 

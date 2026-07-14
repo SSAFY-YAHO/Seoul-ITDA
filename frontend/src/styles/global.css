@@ -273,6 +273,30 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 .chat-bubble--user { align-self: flex-end; background: rgba(217, 180, 108, 0.2); }
 .chat-bubble--assistant { align-self: flex-start; background: rgba(246, 239, 226, 0.9); }
 .chat-bubble p { margin: 0; }
+.chat-bubble__label {
+  display: inline-block;
+  margin-bottom: 0.35rem;
+  color: var(--color-text-sub);
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+.chat-bubble__sources {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.55rem;
+}
+.source-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.28rem 0.55rem;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--color-text-sub);
+  font-size: 0.76rem;
+  font-weight: 700;
+}
 .chat-suggestions { display: flex; flex-wrap: wrap; gap: 0.45rem; }
 .suggestion-chip { padding: 0.5rem 0.7rem; border-radius: var(--radius-pill); background: rgba(217, 180, 108, 0.16); color: #8a6a2e; }
 .chat-panel__composer { display: grid; gap: 0.6rem; }

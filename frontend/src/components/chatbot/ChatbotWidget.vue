@@ -11,6 +11,8 @@ const messages = ref([
     role: "assistant",
     content:
       "서울잇다 챗봇입니다. 서울 관광지, 축제, 맛집, 커뮤니티 글에 대해 질문해보세요.",
+    sources: [],
+    metaLabel: "안내",
   },
 ]);
 
@@ -47,11 +49,19 @@ async function sendMessage() {
       response?.answer ||
       response?.message ||
       "답변을 생성하지 못했습니다. 잠시 후 다시 시도해주세요.";
-    messages.value.push({ role: "assistant", content });
+    const sources = Array.isArray(response?.sources) ? response.sources : [];
+    const metaLabel = response?.used_openai
+      ? "AI + 저장 데이터"
+      : response?.fallback
+        ? "저장 데이터 기반"
+        : "응답";
+    messages.value.push({ role: "assistant", content, sources, metaLabel });
   } catch (error) {
     messages.value.push({
       role: "assistant",
       content: error.message || "챗봇 응답을 받지 못했습니다.",
+      sources: [],
+      metaLabel: "오류",
     });
   } finally {
     isLoading.value = false;
@@ -121,7 +131,17 @@ function resetChat() {
               : 'chat-bubble--assistant',
           ]"
         >
+          <span v-if="message.metaLabel" class="chat-bubble__label">{{ message.metaLabel }}</span>
           <p>{{ message.content }}</p>
+          <div v-if="message.sources?.length" class="chat-bubble__sources">
+            <span
+              v-for="source in message.sources"
+              :key="source"
+              class="source-chip"
+            >
+              {{ source.replace(/^attraction:/, "장소: ").replace(/^post:/, "글: #") }}
+            </span>
+          </div>
         </div>
         <div v-if="isLoading" class="chat-bubble chat-bubble--assistant">
           <p>답변 생성 중...</p>
