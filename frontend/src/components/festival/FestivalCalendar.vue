@@ -52,7 +52,7 @@ const calendarOptions = computed(() => ({
     emit("date-click", info);
   },
   datesSet(info) {
-    emit("month-change", info.view.currentStart);
+    emit("month-change", info.view.calendar.getDate());
   },
   eventClassNames(info) {
     return [getEventTone(info.event)];
@@ -66,7 +66,20 @@ const calendarOptions = computed(() => ({
 watch(
   () => props.initialDate,
   (date) => {
-    if (date) calendarRef.value?.getApi().gotoDate(date);
+    if (!date) return;
+
+    const calendarApi = calendarRef.value?.getApi();
+    if (!calendarApi) return;
+
+    const targetDate = new Date(`${date}T00:00:00`);
+    const displayedDate = calendarApi.getDate();
+    const isSameMonth =
+      targetDate.getFullYear() === displayedDate.getFullYear() &&
+      targetDate.getMonth() === displayedDate.getMonth();
+
+    if (!isSameMonth) {
+      calendarApi.gotoDate(targetDate);
+    }
   },
 );
 </script>

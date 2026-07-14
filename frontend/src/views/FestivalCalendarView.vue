@@ -147,7 +147,13 @@ function changeMonth(step) {
 }
 
 function syncCurrentMonth(date) {
-  currentMonth.value = new Date(date.getFullYear(), date.getMonth(), 1);
+  const isSameMonth =
+    currentMonth.value.getFullYear() === date.getFullYear() &&
+    currentMonth.value.getMonth() === date.getMonth();
+
+  if (!isSameMonth) {
+    currentMonth.value = new Date(date.getFullYear(), date.getMonth(), 1);
+  }
 }
 
 function resetFilters() {
