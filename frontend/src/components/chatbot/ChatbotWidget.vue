@@ -50,11 +50,13 @@ async function sendMessage() {
       response?.message ||
       "답변을 생성하지 못했습니다. 잠시 후 다시 시도해주세요.";
     const sources = Array.isArray(response?.sources) ? response.sources : [];
-    const metaLabel = response?.used_openai
-      ? "AI + 저장 데이터"
-      : response?.fallback
-        ? "저장 데이터 기반"
-        : "응답";
+    const metaLabel = response?.provider === "local"
+      ? "Local AI + 저장 데이터"
+      : response?.provider === "openai"
+        ? "OpenAI + 저장 데이터"
+        : response?.fallback
+          ? "저장 데이터 기반"
+          : "응답";
     messages.value.push({ role: "assistant", content, sources, metaLabel });
   } catch (error) {
     messages.value.push({
@@ -87,6 +89,8 @@ function resetChat() {
       role: "assistant",
       content:
         "서울잇다 챗봇입니다. 서울 관광지, 축제, 맛집, 커뮤니티 글에 대해 질문해보세요.",
+      sources: [],
+      metaLabel: "안내",
     },
   ];
 }

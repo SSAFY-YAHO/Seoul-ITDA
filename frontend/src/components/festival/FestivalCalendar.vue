@@ -60,8 +60,8 @@ const calendarOptions = computed(() => ({
     <div v-else-if="events.length === 0" class="empty-state">
       <strong>축제 데이터를 준비 중입니다.</strong>
       <p>
-        현재 표시할 축제 일정이 없습니다. 백엔드에서 축제 데이터가 준비되면 바로
-        반영됩니다.
+        현재 표시할 축제 일정이 없습니다. 다른 조건으로 검색하거나 목록 보기로
+        확인해 주세요.
       </p>
     </div>
     <div v-else class="festival-calendar-wrapper">

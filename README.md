@@ -35,6 +35,9 @@ npm install
 npm run dev
 ```
 
+`VITE_API_BASE_URL` is optional. If it is unset, the frontend calls the same origin it was deployed from,
+which is the safer default for production deployments behind a single domain or reverse proxy.
+
 ### Backend
 
 ```bash
@@ -43,6 +46,13 @@ python -m venv .venv
 cd backend
 ../.venv/Scripts/python -m uvicorn app.main:app --reload
 ```
+
+`DATABASE_URL=sqlite:///./backend/localhub.db` is resolved relative to the repository root by the app,
+so the backend can be started from either the repo root or the `backend/` directory without breaking
+data loading.
+
+For production, set `CHAT_AI_PROVIDER=openai` unless you intentionally run a local Ollama service in the same
+environment. `local` should be treated as an explicit opt-in deployment mode.
 
 ## 기본 엔드포인트
 

@@ -1,64 +1,101 @@
 <script setup>
-import { computed, onMounted, ref } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import brandMark from "../assets/mascot.png";
 import { fetchLocations } from "../api/locations";
-import { getHealth } from "../api/client";
+import { fetchFestivals } from "../api/festivals";
+import { parseFestivalDateRange } from "../utils/festivalDate";
 
 const router = useRouter();
 const locations = ref([]);
 const loading = ref(true);
 const error = ref("");
-const health = ref(null);
+const activeGuide = ref("");
+const selectedMapLocation = ref(null);
+const festivalItems = ref([]);
+const festivalLoading = ref(false);
+const festivalError = ref("");
+const viewportWidth = ref(typeof window !== "undefined" ? window.innerWidth : 1200);
+const locationSlideIndex = ref(0);
 
 const guideCards = [
   {
+    key: "tour",
     title: "관광지 먼저 보기",
     description: "도심 속 명소와 산책하기 좋은 동선을 말랑하게 먼저 확인합니다.",
-    action: () => router.push("/festivals"),
+    buttonLabel: "바로 열기",
   },
   {
+    key: "festival",
     title: "축제 일정 확인",
     description: "이번 달 서울 축제를 날짜 순서대로 귀엽게 살펴봅니다.",
-    action: () => router.push("/festivals"),
-  },
-  {
-    title: "커뮤니티 둘러보기",
-    description: "익명 글을 통해 실제 방문 경험과 감상을 가볍게 읽습니다.",
-    action: () => router.push("/posts"),
+    buttonLabel: "바로 열기",
   },
 ];
 
-const heroSignals = [
-  { label: "관광·축제·맛집", value: "한 번에 탐색" },
-  { label: "지역별 정리", value: "서울 동선 중심" },
-  { label: "질문 응답", value: "챗봇 연계" },
-];
+const recommendedLocations = computed(() => locations.value);
+const cardsPerView = computed(() => {
+  if (viewportWidth.value < 640) return 1;
+  if (viewportWidth.value < 920) return 2;
+  return 3;
+});
+const maxLocationSlideIndex = computed(() =>
+  Math.max(0, recommendedLocations.value.length - cardsPerView.value),
+);
+const visibleLocations = computed(() =>
+  recommendedLocations.value.slice(
+    locationSlideIndex.value,
+    locationSlideIndex.value + cardsPerView.value,
+  ),
+);
 
-const summaryCards = computed(() => [
-  {
-    label: "불러온 장소",
-    value: `${locations.value.length}개`,
-    tone: "badge--blue",
-  },
-  {
-    label: "백엔드 상태",
-    value: health.value?.status === "ok" ? "정상" : "확인 필요",
-    tone: health.value?.status === "ok" ? "badge--sky" : "badge--slate",
-  },
-  {
-    label: "사용성 방향",
-    value: "처음부터 다시 설계",
-    tone: "badge--ice",
-  },
-  {
-    label: "디자인 톤",
-    value: "파스텔 · 해치",
-    tone: "badge--slate",
-  },
-]);
+const activeGuideTitle = computed(() => {
+  if (activeGuide.value === "tour") return "관광지 먼저 보기";
+  if (activeGuide.value === "festival") return "가장 가까운 축제 일정";
+  return "빠른 안내";
+});
 
-const recommendedLocations = computed(() => locations.value.slice(0, 6));
+const selectedLocationQuery = computed(() => {
+  if (!selectedMapLocation.value) return "";
+
+  return [
+    selectedMapLocation.value.name || selectedMapLocation.value.title || "",
+    formatLocationAddress(selectedMapLocation.value),
+  ]
+    .filter(Boolean)
+    .join(" ");
+});
+
+const mapEmbedUrl = computed(() => {
+  if (!selectedLocationQuery.value) return "";
+
+  return `https://maps.google.com/maps?q=${encodeURIComponent(selectedLocationQuery.value)}&z=14&output=embed`;
+});
+
+const naverMapUrl = computed(() => {
+  if (!selectedLocationQuery.value) return "";
+
+  return `https://map.naver.com/p/search/${encodeURIComponent(selectedLocationQuery.value)}`;
+});
+
+const nearestFestivals = computed(() => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  return festivalItems.value
+    .map((festival) => ({
+      festival,
+      dateRange: parseFestivalDateRange(festival),
+    }))
+    .filter(({ dateRange }) => dateRange && dateRange.end >= today)
+    .sort((a, b) => {
+      const aGap = a.dateRange.start > today ? a.dateRange.start - today : 0;
+      const bGap = b.dateRange.start > today ? b.dateRange.start - today : 0;
+      if (aGap !== bGap) return aGap - bGap;
+      return a.dateRange.start - b.dateRange.start;
+    })
+    .slice(0, 5);
+});
 
 function getCategoryLabel(category) {
   if (!category) return "정보";
@@ -101,6 +138,78 @@ function formatLocationTags(location) {
     .join(" · ");
 }
 
+function formatFestivalPeriod(festival) {
+  const parsed = parseFestivalDateRange(festival);
+  if (!parsed) return "기간 정보 미정";
+  const start = parsed.start.toLocaleDateString("ko-KR", {
+    month: "long",
+    day: "numeric",
+  });
+  const end = parsed.end.toLocaleDateString("ko-KR", {
+    month: "long",
+    day: "numeric",
+  });
+  return `${start} ~ ${end}`;
+}
+
+function getFestivalTitle(festival) {
+  return festival.title || festival.name || festival.festivalName || "축제";
+}
+
+function getFestivalPlace(festival) {
+  return festival.place || festival.venue || festival.location || "장소 정보 미정";
+}
+
+function updateViewportWidth() {
+  viewportWidth.value = window.innerWidth;
+}
+
+function prevLocationPage() {
+  locationSlideIndex.value = Math.max(0, locationSlideIndex.value - 1);
+}
+
+function nextLocationPage() {
+  locationSlideIndex.value = Math.min(
+    maxLocationSlideIndex.value,
+    locationSlideIndex.value + 1,
+  );
+}
+
+function selectMapLocation(location) {
+  selectedMapLocation.value = location;
+}
+
+async function loadFestivalsForGuide() {
+  festivalLoading.value = true;
+  festivalError.value = "";
+
+  try {
+    const data = await fetchFestivals();
+    festivalItems.value = Array.isArray(data) ? data : data?.items || [];
+  } catch (err) {
+    festivalError.value = err.message || "축제 정보를 불러오지 못했습니다.";
+    festivalItems.value = [];
+  } finally {
+    festivalLoading.value = false;
+  }
+}
+
+async function openGuide(type) {
+  activeGuide.value = type;
+
+  if (type === "tour" && !selectedMapLocation.value && recommendedLocations.value.length > 0) {
+    selectedMapLocation.value = recommendedLocations.value[0];
+  }
+
+  if (type === "festival" && festivalItems.value.length === 0) {
+    await loadFestivalsForGuide();
+  }
+}
+
+function closeGuide() {
+  activeGuide.value = "";
+}
+
 async function loadLocations() {
   loading.value = true;
   error.value = "";
@@ -116,20 +225,22 @@ async function loadLocations() {
   }
 }
 
-async function loadHealth() {
-  try {
-    health.value = await getHealth();
-  } catch (err) {
-    health.value = {
-      status: "error",
-      message: err.message || "백엔드 연결을 확인해주세요.",
-    };
-  }
-}
-
 onMounted(() => {
   loadLocations();
-  loadHealth();
+  window.addEventListener("resize", updateViewportWidth);
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener("resize", updateViewportWidth);
+});
+
+watch([recommendedLocations, cardsPerView], () => {
+  if (locationSlideIndex.value > maxLocationSlideIndex.value) {
+    locationSlideIndex.value = maxLocationSlideIndex.value;
+  }
+  if (!selectedMapLocation.value && recommendedLocations.value.length > 0) {
+    selectedMapLocation.value = recommendedLocations.value[0];
+  }
 });
 </script>
 
@@ -140,8 +251,8 @@ onMounted(() => {
         <span class="badge badge--blue">서울잇다 · 도시 정보 허브</span>
         <h1>서울을 처음 보는 사람도 금방 길을 찾게</h1>
         <p>
-          관광지, 축제, 맛집, 익명 커뮤니티를 한 화면에서 정리했습니다. 복잡한
-          설명보다 먼저 동선이 보이도록 귀엽고 단정하게 배치했습니다.
+          서울잇다는 서울 관광 정보와 축제 일정, 그리고 사용자 후기를 함께
+          모아 빠르게 확인할 수 있는 통합 안내 사이트입니다.
         </p>
         <div class="hero-actions">
           <button
@@ -159,19 +270,13 @@ onMounted(() => {
             커뮤니티 보기
           </button>
         </div>
-        <div class="hero-highlights hero-highlights--stacked">
-          <div v-for="signal in heroSignals" :key="signal.label" class="highlight-pill">
-            <strong>{{ signal.value }}</strong>
-            <p>{{ signal.label }}</p>
-          </div>
-        </div>
       </div>
 
       <div class="hero-visual hero-visual--stack">
         <div class="hero-panel home-hero-panel">
           <div class="hero-panel__bar">
             <span class="badge badge--sky">오늘의 안내</span>
-            <span class="meta-pill">빠른 탐색 순서</span>
+            <span class="meta-pill">서울을 가볍게 고르는 방법</span>
           </div>
           <div class="hero-panel__stack">
             <article class="hero-panel__card">
@@ -191,7 +296,7 @@ onMounted(() => {
             <img :src="brandMark" alt="서울잇다 아이콘" />
             <div>
               <strong>서울잇다</strong>
-              <p class="helper-text">해치 아이콘과 어울리는 파스텔 · 포근한 화면입니다.</p>
+              <p class="helper-text">서울에서 무엇을 할지 빠르게 정리해 주는 여행 안내 화면입니다.</p>
             </div>
           </div>
         </div>
@@ -210,25 +315,10 @@ onMounted(() => {
           <span class="badge badge--ice">가이드</span>
           <h3>{{ card.title }}</h3>
           <p>{{ card.description }}</p>
-          <button class="btn btn--ghost btn--small" type="button" @click="card.action">
-            바로 열기
+          <button class="btn btn--ghost btn--small" type="button" @click="openGuide(card.key)">
+            {{ card.buttonLabel }}
           </button>
         </article>
-      </div>
-    </section>
-
-    <section class="section-card section-block">
-      <div class="section-heading">
-        <div>
-          <p class="section-label">한눈에 보기</p>
-          <h2>현재 서비스 상태</h2>
-        </div>
-      </div>
-      <div class="hero-highlights hero-highlights--stacked">
-        <div v-for="item in summaryCards" :key="item.label" class="highlight-pill">
-          <span :class="['badge', item.tone]">{{ item.label }}</span>
-          <strong>{{ item.value }}</strong>
-        </div>
       </div>
     </section>
 
@@ -239,9 +329,27 @@ onMounted(() => {
           <h2>지금 둘러볼 만한 서울 정보</h2>
           <p class="page-subtitle">실제 데이터가 있으면 바로 카드로, 없으면 안내 문구로 보여줍니다.</p>
         </div>
-        <button class="btn btn--ghost" type="button" @click="loadLocations">
-          새로고침
-        </button>
+        <div class="inline-actions">
+          <button class="btn btn--ghost" type="button" @click="loadLocations">
+            새로고침
+          </button>
+          <button
+            class="btn btn--secondary btn--small"
+            type="button"
+            :disabled="locationSlideIndex === 0"
+            @click="prevLocationPage"
+          >
+            이전
+          </button>
+          <button
+            class="btn btn--secondary btn--small"
+            type="button"
+            :disabled="locationSlideIndex >= maxLocationSlideIndex"
+            @click="nextLocationPage"
+          >
+            다음
+          </button>
+        </div>
       </div>
 
       <div v-if="loading" class="loading-state">
@@ -257,11 +365,11 @@ onMounted(() => {
       </div>
       <div v-else-if="recommendedLocations.length === 0" class="empty-state">
         <strong>표시할 장소가 아직 없습니다.</strong>
-        <p>백엔드에서 데이터를 불러오면 여기서 바로 확인할 수 있습니다.</p>
+        <p>지금은 추천 장소를 준비 중입니다. 잠시 후 다시 확인해 주세요.</p>
       </div>
-      <div v-else class="card-list">
+      <div v-else class="card-list home-location-track">
         <article
-          v-for="location in recommendedLocations"
+          v-for="location in visibleLocations"
           :key="location.id || location.name"
           class="location-card"
         >
@@ -280,48 +388,93 @@ onMounted(() => {
       </div>
     </section>
 
-    <section class="section-card section-block home-dual-grid">
-      <article class="ai-card">
-        <div class="ai-card__title">
-          <span class="badge badge--sky">서울 일정</span>
-          <h3>축제 캘린더로 이동</h3>
+    <div v-if="activeGuide" class="modal-backdrop" @click.self="closeGuide">
+      <section class="section-card modal-card home-guide-modal">
+        <div class="modal-card__header">
+          <div>
+            <p class="section-label">빠른 안내</p>
+            <h2>{{ activeGuideTitle }}</h2>
+          </div>
+          <button class="btn btn--ghost btn--small" type="button" @click="closeGuide">
+            닫기
+          </button>
         </div>
-        <p>
-          날짜별로 정리된 축제와 행사를 먼저 확인하면, 서울을 훨씬 편하게 둘러볼
-          수 있습니다.
-        </p>
-        <button class="btn btn--primary btn--small" type="button" @click="router.push('/festivals')">
-          축제 페이지 열기
-        </button>
-      </article>
 
-      <article class="ai-card">
-        <div class="ai-card__title">
-          <span class="badge badge--ice">커뮤니티</span>
-          <h3>익명 글로 현장 느낌 보기</h3>
-        </div>
-        <p>
-          실제로 다녀온 사람들의 짧은 메모를 읽으면 장소 선택이 쉬워집니다.
-        </p>
-        <button class="btn btn--secondary btn--small" type="button" @click="router.push('/posts')">
-          게시글 페이지 열기
-        </button>
-      </article>
-    </section>
+        <div class="modal-card__body">
+          <div v-if="activeGuide === 'tour'">
+            <div v-if="loading" class="loading-state">
+              <strong>관광지 목록을 준비하는 중입니다.</strong>
+              <p>잠시만 기다려 주세요.</p>
+            </div>
+            <div v-else-if="recommendedLocations.length === 0" class="empty-state">
+              <strong>표시할 관광지 데이터가 없습니다.</strong>
+              <p>잠시 후 다시 시도해 주세요.</p>
+            </div>
+            <div v-else class="guide-map-layout">
+              <div class="guide-map-wrap">
+                <iframe
+                  v-if="mapEmbedUrl"
+                  class="guide-map-frame"
+                  :src="mapEmbedUrl"
+                  title="관광지 지도"
+                  loading="lazy"
+                  referrerpolicy="no-referrer-when-downgrade"
+                />
+                <a
+                  v-if="naverMapUrl"
+                  class="btn btn--primary guide-map-link"
+                  :href="naverMapUrl"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  네이버 지도에서 열기
+                </a>
+              </div>
+              <div class="guide-location-list">
+                <button
+                  v-for="location in recommendedLocations.slice(0, 8)"
+                  :key="location.id || location.name"
+                  class="guide-location-item"
+                  :class="{ 'guide-location-item--active': selectedMapLocation?.id === location.id }"
+                  type="button"
+                  @click="selectMapLocation(location)"
+                >
+                  <strong>{{ location.name || location.title || "이름 미정" }}</strong>
+                  <span>{{ formatLocationAddress(location) }}</span>
+                </button>
+              </div>
+            </div>
+          </div>
 
-    <section class="section-card section-block" v-if="health">
-      <div class="section-heading">
-        <div>
-          <p class="section-label">연결 상태</p>
-          <h2>백엔드 응답 확인</h2>
+          <div v-else-if="activeGuide === 'festival'">
+            <div v-if="festivalLoading" class="loading-state">
+              <strong>가장 가까운 축제를 찾는 중입니다.</strong>
+              <p>잠시만 기다려 주세요.</p>
+            </div>
+            <div v-else-if="festivalError" class="error-state">
+              <strong>축제 정보를 불러오지 못했습니다.</strong>
+              <p>{{ festivalError }}</p>
+            </div>
+            <div v-else-if="nearestFestivals.length === 0" class="empty-state">
+              <strong>현재 기준으로 표시할 일정이 없습니다.</strong>
+              <p>필터를 넓혀 전체 축제 캘린더에서 확인해 주세요.</p>
+            </div>
+            <div v-else class="guide-festival-list">
+              <article
+                v-for="item in nearestFestivals"
+                :key="item.festival.id || getFestivalTitle(item.festival)"
+                class="detail-card detail-card--compact"
+              >
+                <span class="badge badge--yellow">가까운 일정</span>
+                <h3>{{ getFestivalTitle(item.festival) }}</h3>
+                <p>{{ formatFestivalPeriod(item.festival) }}</p>
+                <p class="helper-text">{{ getFestivalPlace(item.festival) }}</p>
+              </article>
+            </div>
+          </div>
         </div>
-      </div>
-      <div class="health-panel">
-        <strong>
-          {{ health.status === 'ok' ? '백엔드 연결이 정상입니다.' : '백엔드 연결을 확인해 주세요.' }}
-        </strong>
-        <p>{{ health.message || 'FastAPI health endpoint가 응답하고 있습니다.' }}</p>
-      </div>
-    </section>
+      </section>
+    </div>
+
   </div>
 </template>

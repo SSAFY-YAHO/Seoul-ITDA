@@ -110,8 +110,8 @@ onMounted(() => {
         <div class="detail-card detail-card--compact">
           <h3>삭제하기</h3>
           <p class="helper-text">
-            실제 비밀번호는 저장되지 않으며, 백엔드 스펙에 따라 검증됩니다.
-            개인정보를 포함하지 않은 비밀번호를 입력하세요.
+            작성할 때 정한 비밀번호를 입력하면 글을 삭제할 수 있습니다.
+            개인정보를 포함하지 않은 비밀번호를 사용해 주세요.
           </p>
           <label class="field" for="delete-password">
             <span>수정용 비밀번호</span>

@@ -1,13 +1,10 @@
 <script setup>
 const props = defineProps({
   filters: Object,
-  availableRegions: Array,
-  availableCategories: Array,
   viewMode: String,
-  currentMonthLabel: String,
 });
 
-const emit = defineEmits(["update:filters", "update:viewMode", "reset"]);
+const emit = defineEmits(["update:filters", "update:viewMode", "reset", "apply"]);
 
 function updateFilter(key, value) {
   emit("update:filters", { ...props.filters, [key]: value });
@@ -42,20 +39,6 @@ function updateFilter(key, value) {
       </label>
 
       <label class="field">
-        <span>월</span>
-        <select
-          class="input"
-          :value="filters.month"
-          @change="updateFilter('month', $event.target.value)"
-        >
-          <option value="">전체</option>
-          <option v-for="month in 12" :key="month" :value="month">
-            {{ month }}월
-          </option>
-        </select>
-      </label>
-
-      <label class="field">
         <span>진행 상태</span>
         <select
           class="input"
@@ -69,46 +52,37 @@ function updateFilter(key, value) {
         </select>
       </label>
 
-      <label v-if="availableRegions.length" class="field">
-        <span>지역</span>
-        <select
+      <label class="field">
+        <span>시작일</span>
+        <input
           class="input"
-          :value="filters.region"
-          @change="updateFilter('region', $event.target.value)"
-        >
-          <option value="">전체</option>
-          <option
-            v-for="region in availableRegions"
-            :key="region"
-            :value="region"
-          >
-            {{ region }}
-          </option>
-        </select>
+          type="date"
+          :value="filters.startDate"
+          @input="updateFilter('startDate', $event.target.value)"
+        />
       </label>
 
-      <label v-if="availableCategories.length" class="field">
-        <span>카테고리</span>
-        <select
+      <label class="field">
+        <span>종료일</span>
+        <input
           class="input"
-          :value="filters.category"
-          @change="updateFilter('category', $event.target.value)"
-        >
-          <option value="">전체</option>
-          <option
-            v-for="category in availableCategories"
-            :key="category"
-            :value="category"
-          >
-            {{ category }}
-          </option>
-        </select>
+          type="date"
+          :value="filters.endDate"
+          @input="updateFilter('endDate', $event.target.value)"
+        />
       </label>
     </div>
 
     <div class="festival-filter__footer">
-      <p class="helper-text">현재 월: {{ currentMonthLabel }}</p>
+      <p class="helper-text">필터 값을 입력한 뒤 검색 적용 버튼을 눌러주세요.</p>
       <div class="inline-actions">
+        <button
+          class="btn btn--primary btn--small"
+          type="button"
+          @click="emit('apply')"
+        >
+          검색 적용
+        </button>
         <button
           class="btn btn--secondary btn--small"
           type="button"
