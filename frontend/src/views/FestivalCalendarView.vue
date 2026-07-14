@@ -52,6 +52,10 @@ const availableCategories = computed(() => {
   return Array.from(categories);
 });
 
+const hasDatedFestivals = computed(() =>
+  filteredFestivals.value.some((festival) => Boolean(parseFestivalDateRange(festival))),
+);
+
 const calendarEvents = computed(() => {
   return festivalItems.value
     .map((festival, index) => toCalendarEvent(festival, index))
@@ -91,12 +95,15 @@ const filteredFestivals = computed(() => {
       ""
     ).toLowerCase();
     const parsed = parseFestivalDateRange(festival);
-    if (!parsed) return false;
 
     if (keyword && !(title.includes(keyword) || description.includes(keyword)))
       return false;
-    if (month && parsed.start.getMonth() + 1 !== month) return false;
-    if (status && getFestivalStatus(festival) !== status) return false;
+    if (month) {
+      if (!parsed || parsed.start.getMonth() + 1 !== month) return false;
+    }
+    if (status) {
+      if (!parsed || getFestivalStatus(festival) !== status) return false;
+    }
     if (region) {
       const targetRegion = (
         festival.region ||
@@ -127,9 +134,16 @@ const visibleEvents = computed(() =>
 
 const featuredFestivals = computed(() => {
   const sorted = [...filteredFestivals.value].sort((a, b) => {
-    const aDate = parseFestivalDateRange(a)?.start || new Date(0);
-    const bDate = parseFestivalDateRange(b)?.start || new Date(0);
-    return aDate - bDate;
+    const aDate = parseFestivalDateRange(a)?.start;
+    const bDate = parseFestivalDateRange(b)?.start;
+
+    if (aDate && bDate) {
+      return aDate - bDate;
+    }
+    if (aDate) return -1;
+    if (bDate) return 1;
+
+    return String(a.title || a.name || "").localeCompare(String(b.title || b.name || ""), "ko");
   });
   return sorted.slice(0, 5);
 });
@@ -212,6 +226,16 @@ onMounted(() => {
     }
   }
 });
+
+watch(
+  [loading, hasDatedFestivals],
+  ([isLoading, hasDates]) => {
+    if (!isLoading && !hasDates) {
+      viewMode.value = "list";
+    }
+  },
+  { immediate: true },
+);
 </script>
 
 <template>
@@ -253,7 +277,7 @@ onMounted(() => {
       @reset="resetFilters"
     />
 
-    <section class="section-card section-block">
+    <section v-if="viewMode !== 'list'" class="section-card section-block">
       <div class="section-heading">
         <div>
           <p class="section-label">캘린더</p>
@@ -293,6 +317,10 @@ onMounted(() => {
         <p>{{ error }}</p>
       </div>
       <div v-else>
+        <div v-if="filteredFestivals.length > 0 && !hasDatedFestivals" class="empty-state">
+          <strong>축제 목록은 준비되었지만 일정 원본은 제공되지 않았습니다.</strong>
+          <p>현재 데이터에는 시작일과 종료일이 없어 목록 보기로 자동 전환했습니다.</p>
+        </div>
         <FestivalCalendar
           :events="visibleEvents"
           :loading="loading"
@@ -306,7 +334,7 @@ onMounted(() => {
       </div>
     </section>
 
-    <section class="section-card section-block festival-list-section">
+    <section v-if="viewMode !== 'calendar'" class="section-card section-block festival-list-section">
       <div class="section-heading">
         <div>
           <p class="section-label">축제 목록</p>
@@ -344,6 +372,8 @@ onMounted(() => {
                 ? "예정"
                 : getFestivalStatus(festival) === "ongoing"
                   ? "진행 중"
+                  : getFestivalStatus(festival) === "unknown"
+                    ? "일정 미정"
                   : "종료"
             }}</span>
           </div>
