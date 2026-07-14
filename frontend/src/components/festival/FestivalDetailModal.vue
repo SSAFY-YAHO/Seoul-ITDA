@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, onBeforeUnmount } from "vue";
+import { computed, onBeforeUnmount, watch } from "vue";
 
 const props = defineProps({
   festival: Object,
@@ -16,14 +16,23 @@ function handleKeydown(event) {
   }
 }
 
-onMounted(() => {
-  document.addEventListener("keydown", handleKeydown);
-  document.body.style.overflow = "hidden";
-});
+function syncBodyScrollLock(isOpen) {
+  document.body.style.overflow = isOpen ? "hidden" : "";
+}
+
+watch(
+  () => props.isOpen,
+  (isOpen) => {
+    syncBodyScrollLock(Boolean(isOpen));
+  },
+  { immediate: true },
+);
+
+document.addEventListener("keydown", handleKeydown);
 
 onBeforeUnmount(() => {
   document.removeEventListener("keydown", handleKeydown);
-  document.body.style.overflow = "";
+  syncBodyScrollLock(false);
 });
 </script>
 
