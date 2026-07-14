@@ -2,8 +2,7 @@
 import FullCalendar from "@fullcalendar/vue3";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
-import listPlugin from "@fullcalendar/list";
-import { computed } from "vue";
+import { computed, ref, watch } from "vue";
 
 const props = defineProps({
   events: Array,
@@ -12,22 +11,34 @@ const props = defineProps({
   initialDate: String,
 });
 
-const emit = defineEmits(["date-click", "event-click"]);
+const emit = defineEmits(["date-click", "event-click", "month-change"]);
+const calendarRef = ref(null);
+
+function getEventTone(event) {
+  const source = `${event.id}-${event.title}`;
+  const toneIndex = [...source].reduce((sum, character) => sum + character.charCodeAt(0), 0) % 4;
+  return `festival-event--tone-${toneIndex + 1}`;
+}
 
 const calendarOptions = computed(() => ({
-  plugins: [dayGridPlugin, interactionPlugin, listPlugin],
+  plugins: [dayGridPlugin, interactionPlugin],
   initialView: "dayGridMonth",
   initialDate: props.initialDate,
   headerToolbar: {
-    left: "prev today next",
+    left: "",
     center: "title",
-    right: "dayGridMonth listMonth",
+    right: "",
   },
   locale: "ko",
+  titleFormat: { year: "numeric", month: "long" },
+  dayHeaderFormat: { weekday: "long" },
   height: "auto",
+  fixedWeekCount: false,
+  showNonCurrentDates: true,
   events: props.events,
   eventDisplay: "block",
-  dayMaxEvents: 3,
+  displayEventTime: false,
+  dayMaxEvents: 4,
   moreLinkText: "+ 더 보기",
   eventTimeFormat: {
     hour: "2-digit",
@@ -40,11 +51,24 @@ const calendarOptions = computed(() => ({
   dateClick(info) {
     emit("date-click", info);
   },
+  datesSet(info) {
+    emit("month-change", info.view.currentStart);
+  },
+  eventClassNames(info) {
+    return [getEventTone(info.event)];
+  },
   eventContent(arg) {
     const title = arg.event.title || "축제";
     return { html: `<span class="fc-event-title">${title}</span>` };
   },
 }));
+
+watch(
+  () => props.initialDate,
+  (date) => {
+    if (date) calendarRef.value?.getApi().gotoDate(date);
+  },
+);
 </script>
 
 <template>
@@ -65,7 +89,7 @@ const calendarOptions = computed(() => ({
       </p>
     </div>
     <div v-else class="festival-calendar-wrapper">
-      <FullCalendar :options="calendarOptions" />
+      <FullCalendar ref="calendarRef" :options="calendarOptions" />
     </div>
   </div>
 </template>

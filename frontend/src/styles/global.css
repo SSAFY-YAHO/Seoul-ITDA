@@ -389,15 +389,52 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
   gap: 0.8rem;
 }
 .festival-calendar-card {
-  padding: 1rem;
+  padding: 1.1rem;
   overflow: hidden;
+  background: #fff;
+}
+.festival-calendar-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 0.34fr);
+  gap: 1rem;
+  align-items: start;
 }
 .festival-calendar-wrapper .fc {
   font-family: inherit;
 }
 .festival-calendar-wrapper .fc-toolbar-title {
-  font-size: 1.05rem;
+  font-size: clamp(1.35rem, 2.4vw, 1.85rem);
+  font-weight: 800;
   color: var(--color-text-main);
+}
+.festival-calendar-wrapper .fc-header-toolbar {
+  margin-bottom: 1.2rem;
+}
+.festival-calendar-wrapper .fc-scrollgrid {
+  border-radius: 14px;
+  overflow: hidden;
+  border-color: rgba(122, 102, 72, 0.18);
+}
+.festival-calendar-wrapper .fc-col-header-cell {
+  padding: 0.7rem 0;
+  background: #fffdf9;
+}
+.festival-calendar-wrapper .fc-col-header-cell-cushion {
+  color: var(--color-text-sub);
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+.festival-calendar-wrapper .fc-col-header-cell:first-child .fc-col-header-cell-cushion {
+  color: #d8748a;
+}
+.festival-calendar-wrapper .fc-col-header-cell:last-child .fc-col-header-cell-cushion {
+  color: #668ebf;
+}
+.festival-calendar-wrapper .fc-daygrid-day-frame {
+  min-height: 108px;
+}
+.festival-calendar-wrapper .fc-daygrid-day-top {
+  flex-direction: row;
 }
 .festival-calendar-wrapper .fc-button {
   background: var(--color-surface);
@@ -416,21 +453,82 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 }
 .festival-calendar-wrapper .fc-daygrid-day-number {
   color: var(--color-text-main);
+  padding: 0.45rem 0.5rem;
+  font-size: 0.85rem;
 }
+.festival-calendar-wrapper .fc-day-sun .fc-daygrid-day-number { color: #d8748a; }
+.festival-calendar-wrapper .fc-day-sat .fc-daygrid-day-number { color: #668ebf; }
+.festival-calendar-wrapper .fc-day-other .fc-daygrid-day-number { opacity: 0.35; }
 .festival-calendar-wrapper .fc-day-today {
   background: rgba(217, 180, 108, 0.12) !important;
 }
 .festival-calendar-wrapper .fc-event {
-  background: linear-gradient(90deg, var(--color-primary-blue), var(--color-primary-sky));
   border: 0;
-  border-radius: var(--radius-pill);
-  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  padding: 0.18rem 0.42rem;
+  min-height: 24px;
+  cursor: pointer;
+  box-shadow: none;
+}
+.festival-calendar-wrapper .festival-event--tone-1 { background: #f5bfd1; color: #74344c; }
+.festival-calendar-wrapper .festival-event--tone-2 { background: #c7e7e7; color: #285d61; }
+.festival-calendar-wrapper .festival-event--tone-3 { background: #d7d0f4; color: #4c447d; }
+.festival-calendar-wrapper .festival-event--tone-4 { background: #cdddf2; color: #355477; }
+.festival-calendar-wrapper .fc-event:hover {
+  filter: brightness(0.97);
 }
 .festival-calendar-wrapper .fc-event-title {
   display: block;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+.festival-monthly-panel {
+  display: grid;
+  gap: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+}
+.festival-monthly-panel__header {
+  display: grid;
+  gap: 0.25rem;
+}
+.festival-monthly-panel__header h3 {
+  margin: 0;
+}
+.festival-monthly-list {
+  display: grid;
+  gap: 0.65rem;
+  max-height: 620px;
+  overflow-y: auto;
+  padding-right: 0.2rem;
+}
+.festival-monthly-item {
+  display: grid;
+  justify-items: start;
+  gap: 0.35rem;
+  width: 100%;
+  padding: 0.8rem;
+  text-align: left;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.86);
+}
+.festival-monthly-item:hover {
+  border-color: var(--color-primary-blue);
+  transform: translateY(-1px);
+}
+.festival-monthly-item strong {
+  color: var(--color-text-main);
+  line-height: 1.35;
+}
+.festival-monthly-item > span:not(.badge),
+.festival-monthly-item small {
+  color: var(--color-text-sub);
 }
 .festival-item {
   cursor: pointer;
@@ -498,9 +596,16 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 }
 @media (max-width: 920px) {
   .festival-filter__controls { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .festival-calendar-layout { grid-template-columns: 1fr; }
+  .festival-monthly-list { max-height: 360px; }
 }
 @media (max-width: 640px) {
   .festival-filter__controls { grid-template-columns: 1fr; }
+  .festival-calendar-card { padding: 0.55rem; }
+  .festival-calendar-wrapper .fc-daygrid-day-frame { min-height: 82px; }
+  .festival-calendar-wrapper .fc-col-header-cell-cushion { font-size: 0.68rem; }
+  .festival-calendar-wrapper .fc-event { padding-inline: 0.25rem; }
+  .festival-calendar-wrapper .fc-event-title { font-size: 0.68rem; }
   .modal-card__header,
   .modal-card__footer,
   .festival-item__head { flex-direction: column; align-items: flex-start; }
