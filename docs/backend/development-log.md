@@ -68,3 +68,32 @@
 - 검증
   - 올바른 비밀번호 삭제 성공(200) 확인
   - 비밀번호 누락(400), 불일치(403), 미존재 ID(404) 확인
+
+### API: POST /api/data/load
+- 구현 파일
+  - `backend/app/models/attraction.py`
+  - `backend/app/services/data_service.py`
+  - `backend/app/schemas/data.py`
+  - `backend/app/routers/data.py`
+  - `data/seoul_places.json`
+- 작업 내용
+  - 서울 관광 데이터 테이블(`attractions`) 추가
+  - JSON 파일 적재 API 추가(신규/갱신/스킵 집계)
+  - 파일 미존재/적재 실패 예외 처리
+- 검증
+  - 기본 파일 적재 호출로 `loaded=3` 확인
+  - DB 테이블 생성 및 건수 확인
+
+### API: POST /api/chat
+- 구현 파일
+  - `backend/app/services/chat_service.py`
+  - `backend/app/schemas/chat.py`
+  - `backend/app/routers/chat.py`
+  - `backend/app/config.py`
+- 작업 내용
+  - 관광 데이터/게시글 기반 질의 응답 API 추가
+  - OpenAI 호출 경로 + 로컬 fallback 경로 구성
+  - 문장형 질문 대응을 위한 키워드 기반 검색 개선
+- 검증
+  - `종로구 관광지 추천해줘` 질의에 데이터 근거 응답 확인
+  - `OPENAI_API_KEY` 미설정 상태 fallback 응답 확인

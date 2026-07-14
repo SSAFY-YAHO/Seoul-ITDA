@@ -1,0 +1,29 @@
+[
+  {
+    "source_id": "tour-001",
+    "name": "경복궁",
+    "category": "관광지",
+    "district": "종로구",
+    "description": "조선 시대 궁궐로 서울 대표 관광지입니다.",
+    "address": "서울 종로구 사직로 161",
+    "tags": ["역사", "궁궐", "문화유산"]
+  },
+  {
+    "source_id": "fest-001",
+    "name": "서울빛초롱축제",
+    "category": "축제",
+    "district": "종로구",
+    "description": "도심에서 열리는 야간 빛 축제입니다.",
+    "address": "서울 종로구 청계천로 일대",
+    "tags": ["야간", "축제", "전시"]
+  },
+  {
+    "source_id": "food-001",
+    "name": "광장시장 빈대떡 골목",
+    "category": "음식점",
+    "district": "종로구",
+    "description": "서울 전통시장 음식 문화를 경험할 수 있는 장소입니다.",
+    "address": "서울 종로구 창경궁로 88",
+    "tags": ["전통시장", "먹거리", "로컬"]
+  }
+]

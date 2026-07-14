@@ -173,3 +173,58 @@
   "detail": "Post not found"
 }
 ```
+
+## 6) Load Seoul Data
+- Method: `POST`
+- Path: `/api/data/load`
+- Description: 서울 관광 JSON 데이터를 DB `attractions` 테이블로 적재합니다.
+
+### Request Body
+```json
+{
+  "file_path": "data/seoul_places.json"
+}
+```
+
+### Success Response
+- Status: `200 OK`
+```json
+{
+  "message": "Seoul data load completed",
+  "loaded": 3,
+  "updated": 0,
+  "skipped": 0,
+  "file_path": "C:\\path\\to\\data\\seoul_places.json"
+}
+```
+
+### Error Responses
+- Status: `404 Not Found` (파일 없음)
+- Status: `500 Internal Server Error` (적재 실패)
+
+## 7) Chat
+- Method: `POST`
+- Path: `/api/chat`
+- Description: 서울 관광 데이터와 커뮤니티 게시글을 근거로 답변합니다.
+
+### Request Body
+```json
+{
+  "question": "종로구 관광지 추천해줘"
+}
+```
+
+### Success Response
+- Status: `200 OK`
+```json
+{
+  "answer": "관광 데이터 기준 추천: ...",
+  "sources": ["attraction:경복궁"],
+  "used_openai": false,
+  "fallback": true
+}
+```
+
+### Rules
+- `OPENAI_API_KEY`가 없거나 OpenAI 호출 실패 시 로컬 데이터 기반 fallback 답변을 반환합니다.
+- 답변에는 `sources`로 근거 레코드를 함께 반환합니다.

@@ -13,11 +13,16 @@ load_dotenv(ROOT_DIR / '.env')
 
 @dataclass(frozen=True)
 class Settings:
+    root_dir: str = str(ROOT_DIR)
     app_name: str = 'LocalHub Seoul API'
     app_env: str = os.getenv('APP_ENV', 'development')
     app_host: str = os.getenv('APP_HOST', '0.0.0.0')
     app_port: int = int(os.getenv('APP_PORT', '8000'))
     database_url: str = os.getenv('DATABASE_URL', 'sqlite:///./backend/localhub.db')
+    seoul_data_path: str = os.getenv('SEOUL_DATA_PATH', 'data/seoul_places.json')
+    openai_api_key: str = os.getenv('OPENAI_API_KEY', '')
+    openai_model: str = os.getenv('OPENAI_MODEL', 'gpt-4o-mini')
+    openai_timeout_sec: int = int(os.getenv('OPENAI_TIMEOUT_SEC', '15'))
     cors_origins: tuple[str, ...] = tuple(
         origin.strip()
         for origin in os.getenv(
