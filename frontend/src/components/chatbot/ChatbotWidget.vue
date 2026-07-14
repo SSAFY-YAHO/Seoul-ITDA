@@ -1,6 +1,6 @@
 <script setup>
 import { computed, nextTick, ref } from "vue";
-import mascot from "../../assets/mascot.svg";
+import brandMark from "../../assets/mascot.png";
 import { sendChatMessage } from "../../api/chat";
 
 const isOpen = ref(false);
@@ -90,8 +90,8 @@ function resetChat() {
       @click="togglePanel"
       aria-label="챗봇 열기"
     >
-      <img :src="mascot" alt="챗봇 마스코트" />
-      <span>챗봇</span>
+      <img :src="brandMark" alt="서울잇다 해치 아이콘" />
+      <span>질문하기</span>
     </button>
 
     <div v-if="isOpen" class="chat-panel section-card">

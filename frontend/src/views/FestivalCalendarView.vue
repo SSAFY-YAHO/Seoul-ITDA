@@ -9,7 +9,7 @@ import {
   parseFestivalDateRange,
   toCalendarEvent,
 } from "../utils/festivalDate.js";
-import mascot from "../assets/mascot.svg";
+import brandMark from "../assets/mascot.png";
 
 const route = useRoute();
 const router = useRouter();
@@ -221,8 +221,8 @@ onMounted(() => {
         <span class="badge badge--yellow">서울 축제 캘린더</span>
         <h1>이번 달의 서울 축제를 한눈에 확인하세요</h1>
         <p>
-          현재 저장소에 제공된 축제 데이터 기준으로 캘린더와 목록을 함께 확인할
-          수 있습니다. 데이터가 준비되면 바로 자동 반영됩니다.
+          날짜, 지역, 카테고리로 축제를 정리해 두어 처음 보는 사람도 바로
+          필요한 일정부터 볼 수 있습니다.
         </p>
         <div class="hero-actions">
           <button class="btn btn--primary" type="button" @click="goToToday">
@@ -238,7 +238,7 @@ onMounted(() => {
         </div>
       </div>
       <div class="hero-visual">
-        <img :src="mascot" alt="서울잇다 마스코트" />
+        <img :src="brandMark" alt="서울잇다 해치 아이콘" />
       </div>
     </section>
 

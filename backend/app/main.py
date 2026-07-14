@@ -11,6 +11,7 @@ from app.models import Attraction, Post
 from app.routers.chat import router as chat_router
 from app.routers.data import router as data_router
 from app.routers.health import router as health_router
+from app.routers.locations import router as locations_router
 from app.routers.posts import router as posts_router
 
 
@@ -31,6 +32,7 @@ app.add_middleware(
 )
 
 app.include_router(health_router)
+app.include_router(locations_router)
 app.include_router(posts_router)
 app.include_router(data_router)
 app.include_router(chat_router)

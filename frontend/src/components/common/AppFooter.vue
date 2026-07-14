@@ -3,14 +3,11 @@
     <div class="container app-footer__inner">
       <div>
         <strong>서울잇다</strong>
-        <p>
-          서울의 관광지, 축제, 맛집과 익명 커뮤니티를 한 곳에서 탐색하는 교육용
-          프로젝트입니다.
-        </p>
+        <p>서울의 관광지, 축제, 맛집, 그리고 익명 커뮤니티를 가볍게 살펴보는 정보 허브입니다.</p>
       </div>
       <div class="footer-meta">
-        <span>활용 데이터</span>
-        <p>서울 공공데이터와 커뮤니티 경험을 기반으로 구성했습니다.</p>
+        <span>살펴볼 흐름</span>
+        <p>처음 방문해도 순서가 보이도록 홈, 축제, 커뮤니티를 연결했습니다.</p>
       </div>
     </div>
   </footer>

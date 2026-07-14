@@ -131,3 +131,35 @@ def load_attractions_from_file(db: Session, file_path: str) -> dict[str, int | s
         'processed_files': len(files),
         'file_path': str(path),
     }
+
+
+def list_attractions(
+    db: Session,
+    *,
+    q: str | None = None,
+    category: str | None = None,
+    district: str | None = None,
+    limit: int = 12,
+) -> list[Attraction]:
+    query = db.query(Attraction)
+
+    if q:
+        keyword = f'%{q.strip()}%'
+        query = query.filter(
+            Attraction.name.ilike(keyword)
+            | Attraction.description.ilike(keyword)
+            | Attraction.address.ilike(keyword)
+            | Attraction.tags.ilike(keyword)
+        )
+
+    if category:
+        query = query.filter(Attraction.category.ilike(f'%{category.strip()}%'))
+
+    if district:
+        query = query.filter(Attraction.district.ilike(f'%{district.strip()}%'))
+
+    return (
+        query.order_by(Attraction.updated_at.desc(), Attraction.id.desc())
+        .limit(max(1, min(limit, 50)))
+        .all()
+    )
