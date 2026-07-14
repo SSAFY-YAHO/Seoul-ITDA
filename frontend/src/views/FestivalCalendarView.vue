@@ -17,50 +17,20 @@ const router = useRouter();
 const loading = ref(true);
 const error = ref("");
 const festivalItems = ref([]);
+const festivalTotal = ref(0);
 const selectedFestival = ref(null);
 const viewMode = ref("calendar");
 const filters = ref({
   keyword: "",
-  month: "",
   status: "",
-  region: "",
-  category: "",
+  startDate: "",
+  endDate: "",
 });
 const currentMonth = ref(new Date());
-const currentMonthLabel = computed(() =>
-  currentMonth.value.toLocaleDateString("ko-KR", {
-    year: "numeric",
-    month: "long",
-  }),
-);
-
-const availableRegions = computed(() => {
-  const regions = new Set();
-  festivalItems.value.forEach((festival) => {
-    const region = festival.region || festival.area || festival.address || "";
-    if (region) regions.add(region);
-  });
-  return Array.from(regions);
-});
-
-const availableCategories = computed(() => {
-  const categories = new Set();
-  festivalItems.value.forEach((festival) => {
-    const category = festival.category || festival.type || "";
-    if (category) categories.add(category);
-  });
-  return Array.from(categories);
-});
 
 const hasDatedFestivals = computed(() =>
   filteredFestivals.value.some((festival) => Boolean(parseFestivalDateRange(festival))),
 );
-
-const calendarEvents = computed(() => {
-  return festivalItems.value
-    .map((festival, index) => toCalendarEvent(festival, index))
-    .filter(Boolean);
-});
 
 function getFestivalStatus(item) {
   const parsed = parseFestivalDateRange(item);
@@ -75,55 +45,7 @@ function getFestivalStatus(item) {
 }
 
 const filteredFestivals = computed(() => {
-  const keyword = filters.value.keyword.trim().toLowerCase();
-  const month = Number(filters.value.month);
-  const status = filters.value.status;
-  const region = filters.value.region;
-  const category = filters.value.category;
-
-  return festivalItems.value.filter((festival) => {
-    const title = (
-      festival.title ||
-      festival.name ||
-      festival.festivalName ||
-      ""
-    ).toLowerCase();
-    const description = (
-      festival.description ||
-      festival.summary ||
-      festival.content ||
-      ""
-    ).toLowerCase();
-    const parsed = parseFestivalDateRange(festival);
-
-    if (keyword && !(title.includes(keyword) || description.includes(keyword)))
-      return false;
-    if (month) {
-      if (!parsed || parsed.start.getMonth() + 1 !== month) return false;
-    }
-    if (status) {
-      if (!parsed || getFestivalStatus(festival) !== status) return false;
-    }
-    if (region) {
-      const targetRegion = (
-        festival.region ||
-        festival.area ||
-        festival.address ||
-        ""
-      ).toLowerCase();
-      if (!targetRegion.includes(region.toLowerCase())) return false;
-    }
-    if (category) {
-      const targetCategory = (
-        festival.category ||
-        festival.type ||
-        ""
-      ).toLowerCase();
-      if (!targetCategory.includes(category.toLowerCase())) return false;
-    }
-
-    return true;
-  });
+  return festivalItems.value;
 });
 
 const visibleEvents = computed(() =>
@@ -175,12 +97,19 @@ async function loadFestivals() {
   loading.value = true;
   error.value = "";
   try {
-    const data = await fetchFestivals();
+    const data = await fetchFestivals({
+      q: filters.value.keyword,
+      status: filters.value.status,
+      startDate: filters.value.startDate,
+      endDate: filters.value.endDate,
+    });
     const items = Array.isArray(data) ? data : data?.items || [];
     festivalItems.value = items;
+    festivalTotal.value = Array.isArray(data) ? items.length : data?.total || items.length;
   } catch (err) {
     error.value = err.message || "축제 정보를 불러오지 못했습니다.";
     festivalItems.value = [];
+    festivalTotal.value = 0;
   } finally {
     loading.value = false;
   }
@@ -202,11 +131,11 @@ function changeMonth(step) {
 function resetFilters() {
   filters.value = {
     keyword: "",
-    month: "",
     status: "",
-    region: "",
-    category: "",
+    startDate: "",
+    endDate: "",
   };
+  loadFestivals();
 }
 
 watch(currentMonth, (value) => {
@@ -268,12 +197,10 @@ watch(
 
     <FestivalFilter
       :filters="filters"
-      :available-regions="availableRegions"
-      :available-categories="availableCategories"
       :view-mode="viewMode"
-      :current-month-label="currentMonthLabel"
       @update:filters="filters = $event"
       @update:viewMode="viewMode = $event"
+      @apply="loadFestivals"
       @reset="resetFilters"
     />
 
@@ -282,6 +209,7 @@ watch(
         <div>
           <p class="section-label">캘린더</p>
           <h2>월간 축제 일정</h2>
+          <p class="page-subtitle">검색 결과 {{ festivalTotal }}건</p>
         </div>
         <div class="inline-actions">
           <button

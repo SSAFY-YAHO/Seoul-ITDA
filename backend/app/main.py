@@ -31,6 +31,23 @@ async def lifespan(_: FastAPI):
                 load_attractions_from_file(session, str(default_data_path))
             except FileNotFoundError:
                 session.rollback()
+
+        has_posts = session.query(Post.id).first() is not None
+        if not has_posts:
+            sample_posts = [
+                Post(
+                    title='서울 도심 반나절 코스 추천',
+                    content='종로와 을지로를 중심으로 걸어서 즐길 수 있는 코스를 공유합니다.',
+                    edit_password='demo1234',
+                ),
+                Post(
+                    title='비 오는 날 실내 문화시설 후기',
+                    content='비 오는 날에도 이동하기 쉬운 실내 전시관 위주로 정리해봤어요.',
+                    edit_password='demo1234',
+                ),
+            ]
+            session.add_all(sample_posts)
+            session.commit()
     finally:
         session.close()
 

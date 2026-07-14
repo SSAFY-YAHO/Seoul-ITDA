@@ -31,12 +31,6 @@ const guideCards = [
     description: "이번 달 서울 축제를 날짜 순서대로 귀엽게 살펴봅니다.",
     buttonLabel: "바로 열기",
   },
-  {
-    key: "community",
-    title: "커뮤니티",
-    description: "익명 글을 통해 실제 방문 경험과 감상을 가볍게 읽습니다.",
-    buttonLabel: "커뮤니티 이동",
-  },
 ];
 
 const recommendedLocations = computed(() => locations.value);
@@ -58,7 +52,6 @@ const visibleLocations = computed(() =>
 const activeGuideTitle = computed(() => {
   if (activeGuide.value === "tour") return "관광지 먼저 보기";
   if (activeGuide.value === "festival") return "가장 가까운 축제 일정";
-  if (activeGuide.value === "community") return "커뮤니티 바로가기";
   return "빠른 안내";
 });
 
@@ -460,48 +453,9 @@ watch([recommendedLocations, cardsPerView], () => {
               </article>
             </div>
           </div>
-
-          <div v-else class="detail-card detail-card--compact">
-            <h3>커뮤니티로 이동</h3>
-            <p class="helper-text">
-              사용자들이 남긴 익명 게시글을 통해 실제 방문 후기를 확인해보세요.
-            </p>
-            <button class="btn btn--primary" type="button" @click="router.push('/posts')">
-              커뮤니티 이동
-            </button>
-          </div>
         </div>
       </section>
     </div>
-
-    <section class="section-card section-block home-dual-grid">
-      <article class="ai-card">
-        <div class="ai-card__title">
-          <span class="badge badge--sky">서울 일정</span>
-          <h3>축제 캘린더로 이동</h3>
-        </div>
-        <p>
-          날짜별로 정리된 축제와 행사를 먼저 확인하면, 서울을 훨씬 편하게 둘러볼
-          수 있습니다.
-        </p>
-        <button class="btn btn--primary btn--small" type="button" @click="router.push('/festivals')">
-          축제 페이지 열기
-        </button>
-      </article>
-
-      <article class="ai-card">
-        <div class="ai-card__title">
-          <span class="badge badge--ice">커뮤니티</span>
-          <h3>익명 글로 현장 느낌 보기</h3>
-        </div>
-        <p>
-          실제로 다녀온 사람들의 짧은 메모를 읽으면 장소 선택이 쉬워집니다.
-        </p>
-        <button class="btn btn--secondary btn--small" type="button" @click="router.push('/posts')">
-          게시글 페이지 열기
-        </button>
-      </article>
-    </section>
 
   </div>
 </template>

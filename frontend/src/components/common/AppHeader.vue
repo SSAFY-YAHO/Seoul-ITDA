@@ -1,13 +1,39 @@
 <script setup>
+import { computed, onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import brandMark from "../../assets/mascot.png";
+import { fetchHealth } from "../../api/health";
 
 const route = useRoute();
 const router = useRouter();
+const healthStatus = ref("checking");
+const healthEnvironment = ref("");
+
+const healthLabel = computed(() => {
+  if (healthStatus.value === "ok") return "API 정상";
+  if (healthStatus.value === "error") return "API 확인 필요";
+  return "API 확인 중";
+});
 
 function isActive(path) {
   return route.path === path;
 }
+
+async function loadHealth() {
+  healthStatus.value = "checking";
+  try {
+    const data = await fetchHealth();
+    healthStatus.value = data?.status === "ok" ? "ok" : "error";
+    healthEnvironment.value = data?.environment || "";
+  } catch (_error) {
+    healthStatus.value = "error";
+    healthEnvironment.value = "";
+  }
+}
+
+onMounted(() => {
+  loadHealth();
+});
 </script>
 
 <template>
@@ -20,6 +46,10 @@ function isActive(path) {
           <span>서울 정보 허브</span>
         </div>
       </button>
+      <span class="health-chip" :class="`health-chip--${healthStatus}`">
+        {{ healthLabel }}
+        <small v-if="healthEnvironment">{{ healthEnvironment }}</small>
+      </span>
       <nav class="nav-links" aria-label="메인 메뉴">
         <button
           class="nav-link"
