@@ -37,7 +37,7 @@ async function handleDelete() {
   deleteSuccess.value = "";
 
   try {
-    await deletePost(route.params.id, { password: password.value });
+    await deletePost(route.params.id, { edit_password: password.value });
     deleteSuccess.value = "게시글이 삭제되었습니다.";
     router.push("/posts");
   } catch (err) {

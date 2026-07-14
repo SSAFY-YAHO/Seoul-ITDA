@@ -23,7 +23,7 @@ async function submitPost() {
     const created = await createPost({
       title: title.value,
       content: content.value,
-      password: password.value,
+      edit_password: password.value,
     });
     const postId = created?.id || created?.post_id;
     if (postId) {

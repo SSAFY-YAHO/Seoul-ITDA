@@ -41,7 +41,7 @@ async function submitEdit() {
     await updatePost(postId.value, {
       title: title.value,
       content: content.value,
-      password: password.value,
+      edit_password: password.value,
     });
     router.push(`/posts/${postId.value}`);
   } catch (err) {

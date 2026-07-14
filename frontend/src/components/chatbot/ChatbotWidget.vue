@@ -42,7 +42,7 @@ async function sendMessage() {
   isLoading.value = true;
 
   try {
-    const response = await sendChatMessage({ message: trimmed });
+    const response = await sendChatMessage({ question: trimmed });
     const content =
       response?.answer ||
       response?.message ||
