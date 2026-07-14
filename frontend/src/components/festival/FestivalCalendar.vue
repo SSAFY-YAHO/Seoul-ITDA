@@ -81,14 +81,10 @@ watch(
       <strong>축제 정보를 불러오지 못했습니다.</strong>
       <p>{{ error }}</p>
     </div>
-    <div v-else-if="events.length === 0" class="empty-state">
-      <strong>축제 데이터를 준비 중입니다.</strong>
-      <p>
-        현재 표시할 축제 일정이 없습니다. 다른 조건으로 검색하거나 목록 보기로
-        확인해 주세요.
-      </p>
-    </div>
     <div v-else class="festival-calendar-wrapper">
+      <div v-if="events.length === 0" class="festival-calendar-empty-note">
+        현재 데이터에는 축제 기간 정보가 없어 일정 바를 표시할 수 없습니다.
+      </div>
       <FullCalendar ref="calendarRef" :options="calendarOptions" />
     </div>
   </div>

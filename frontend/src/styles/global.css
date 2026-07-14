@@ -402,6 +402,14 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 .festival-calendar-wrapper .fc {
   font-family: inherit;
 }
+.festival-calendar-empty-note {
+  margin-bottom: 1rem;
+  padding: 0.7rem 0.9rem;
+  border-radius: var(--radius-sm);
+  background: rgba(217, 180, 108, 0.14);
+  color: var(--color-text-sub);
+  font-size: 0.9rem;
+}
 .festival-calendar-wrapper .fc-toolbar-title {
   font-size: clamp(1.35rem, 2.4vw, 1.85rem);
   font-weight: 800;
