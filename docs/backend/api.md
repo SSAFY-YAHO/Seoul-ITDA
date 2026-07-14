@@ -31,3 +31,29 @@
 - `title`: 1~200자
 - `content`: 1자 이상
 - `edit_password`: 1~100자
+
+## 2) List Posts
+- Method: `GET`
+- Path: `/api/posts`
+- Description: 게시글 목록을 최신순으로 조회합니다.
+
+### Query Parameters
+- `q` (optional): 제목/내용 키워드 검색어
+
+### Success Response
+- Status: `200 OK`
+```json
+{
+  "items": [
+    {
+      "id": 2,
+      "title": "한강 산책",
+      "content": "저녁 코스 추천",
+      "views": 0,
+      "created_at": "2026-07-14T10:00:00",
+      "updated_at": "2026-07-14T10:00:00"
+    }
+  ],
+  "total": 1
+}
+```

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.models.post import Post
@@ -16,3 +17,16 @@ def create_post(db: Session, payload: PostCreateRequest) -> Post:
     db.commit()
     db.refresh(post)
     return post
+
+
+def list_posts(db: Session, query: str | None = None) -> list[Post]:
+    statement = db.query(Post)
+    if query:
+        like_query = f'%{query}%'
+        statement = statement.filter(
+            or_(
+                Post.title.like(like_query),
+                Post.content.like(like_query),
+            )
+        )
+    return statement.order_by(Post.created_at.desc()).all()

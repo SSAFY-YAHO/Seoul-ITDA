@@ -20,3 +20,8 @@ class PostResponse(BaseModel):
     updated_at: datetime
 
     model_config = {'from_attributes': True}
+
+
+class PostListResponse(BaseModel):
+    items: list[PostResponse]
+    total: int
