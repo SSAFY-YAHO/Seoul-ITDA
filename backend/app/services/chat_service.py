@@ -17,6 +17,7 @@ from app.models.post import Post
 class ChatResult:
     answer: str
     sources: list[str]
+    provider: str
     used_openai: bool
     fallback: bool
 
@@ -247,9 +248,58 @@ def _openai_answer(
     return content
 
 
+def _local_ai_answer(
+    question: str,
+    context_lines: list[str],
+    base_url: str,
+    model: str,
+    timeout_sec: int,
+) -> str:
+    system_prompt = (
+        '너는 서울 관광 도우미다. 반드시 제공된 데이터만 근거로 답하고, '
+        '없는 사실은 추측하지 말아라. 답변은 간결하게 정리하라.'
+    )
+    user_prompt = (
+        f'질문: {question}\n'
+        '아래 근거 데이터만 사용해서 답변해라:\n'
+        + '\n'.join(context_lines)
+    )
+
+    payload = {
+        'model': model,
+        'stream': False,
+        'messages': [
+            {'role': 'system', 'content': system_prompt},
+            {'role': 'user', 'content': user_prompt},
+        ],
+        'options': {'temperature': 0.2},
+    }
+
+    normalized_base_url = base_url.rstrip('/')
+    request = urllib.request.Request(
+        f'{normalized_base_url}/api/chat',
+        data=json.dumps(payload).encode('utf-8'),
+        headers={'Content-Type': 'application/json'},
+        method='POST',
+    )
+
+    with urllib.request.urlopen(request, timeout=timeout_sec) as response:
+        data = json.loads(response.read().decode('utf-8'))
+
+    message = data.get('message', {}) if isinstance(data, dict) else {}
+    content = message.get('content', '').strip() if isinstance(message, dict) else ''
+    if not content:
+        raise ValueError('Empty local AI content')
+    return content
+
+
 def answer_chat(
     db: Session,
     question: str,
+    ai_provider: str,
+    local_ai_base_url: str,
+    local_ai_model: str,
+    local_ai_timeout_sec: int,
     openai_api_key: str,
     openai_model: str,
     openai_timeout_sec: int,
@@ -264,29 +314,51 @@ def answer_chat(
         f"post:{post.id}" for post in posts
     ]
 
-    if not openai_api_key:
+    provider = (ai_provider or 'auto').strip().lower()
+
+    def fallback_result() -> ChatResult:
         return ChatResult(
             answer=_local_answer(question, attractions, posts),
             sources=sources,
+            provider='fallback',
             used_openai=False,
             fallback=True,
         )
 
     if not context_lines:
-        return ChatResult(
-            answer=_local_answer(question, attractions, posts),
-            sources=sources,
-            used_openai=False,
-            fallback=True,
-        )
+        return fallback_result()
+
+    if provider in {'local', 'auto'} and local_ai_model.strip():
+        try:
+            answer = _local_ai_answer(
+                question,
+                context_lines,
+                local_ai_base_url,
+                local_ai_model,
+                local_ai_timeout_sec,
+            )
+            return ChatResult(
+                answer=answer,
+                sources=sources,
+                provider='local',
+                used_openai=False,
+                fallback=False,
+            )
+        except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError, ValueError, json.JSONDecodeError):
+            if provider == 'local':
+                return fallback_result()
+
+    if not openai_api_key:
+        return fallback_result()
 
     try:
         answer = _openai_answer(question, context_lines, openai_api_key, openai_model, openai_timeout_sec)
-        return ChatResult(answer=answer, sources=sources, used_openai=True, fallback=False)
-    except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError, ValueError, json.JSONDecodeError):
         return ChatResult(
-            answer=_local_answer(question, attractions, posts),
+            answer=answer,
             sources=sources,
-            used_openai=False,
-            fallback=True,
+            provider='openai',
+            used_openai=True,
+            fallback=False,
         )
+    except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError, ValueError, json.JSONDecodeError):
+        return fallback_result()

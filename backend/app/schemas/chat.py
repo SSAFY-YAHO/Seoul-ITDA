@@ -10,5 +10,6 @@ class ChatRequest(BaseModel):
 class ChatResponse(BaseModel):
     answer: str
     sources: list[str]
+    provider: str
     used_openai: bool
     fallback: bool
