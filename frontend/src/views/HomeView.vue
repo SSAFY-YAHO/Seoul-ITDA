@@ -3,13 +3,11 @@ import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import brandMark from "../assets/mascot.png";
 import { fetchLocations } from "../api/locations";
-import { getHealth } from "../api/client";
 
 const router = useRouter();
 const locations = ref([]);
 const loading = ref(true);
 const error = ref("");
-const health = ref(null);
 
 const guideCards = [
   {
@@ -37,23 +35,23 @@ const heroSignals = [
 
 const summaryCards = computed(() => [
   {
-    label: "불러온 장소",
+    label: "추천 장소",
     value: `${locations.value.length}개`,
     tone: "badge--blue",
   },
   {
-    label: "백엔드 상태",
-    value: health.value?.status === "ok" ? "정상" : "확인 필요",
-    tone: health.value?.status === "ok" ? "badge--sky" : "badge--slate",
+    label: "둘러보기 방식",
+    value: "축제 · 장소 · 후기",
+    tone: "badge--sky",
   },
   {
-    label: "사용성 방향",
-    value: "처음부터 다시 설계",
+    label: "챗봇 활용",
+    value: "질문으로 바로 좁히기",
     tone: "badge--ice",
   },
   {
-    label: "디자인 톤",
-    value: "파스텔 · 해치",
+    label: "추천 분위기",
+    value: "산책 · 실내 · 야경",
     tone: "badge--slate",
   },
 ]);
@@ -116,20 +114,8 @@ async function loadLocations() {
   }
 }
 
-async function loadHealth() {
-  try {
-    health.value = await getHealth();
-  } catch (err) {
-    health.value = {
-      status: "error",
-      message: err.message || "백엔드 연결을 확인해주세요.",
-    };
-  }
-}
-
 onMounted(() => {
   loadLocations();
-  loadHealth();
 });
 </script>
 
@@ -171,7 +157,7 @@ onMounted(() => {
         <div class="hero-panel home-hero-panel">
           <div class="hero-panel__bar">
             <span class="badge badge--sky">오늘의 안내</span>
-            <span class="meta-pill">빠른 탐색 순서</span>
+            <span class="meta-pill">서울을 가볍게 고르는 방법</span>
           </div>
           <div class="hero-panel__stack">
             <article class="hero-panel__card">
@@ -191,7 +177,7 @@ onMounted(() => {
             <img :src="brandMark" alt="서울잇다 아이콘" />
             <div>
               <strong>서울잇다</strong>
-              <p class="helper-text">해치 아이콘과 어울리는 파스텔 · 포근한 화면입니다.</p>
+              <p class="helper-text">서울에서 무엇을 할지 빠르게 정리해 주는 여행 안내 화면입니다.</p>
             </div>
           </div>
         </div>
@@ -221,7 +207,7 @@ onMounted(() => {
       <div class="section-heading">
         <div>
           <p class="section-label">한눈에 보기</p>
-          <h2>현재 서비스 상태</h2>
+          <h2>처음 방문할 때 도움이 되는 정보</h2>
         </div>
       </div>
       <div class="hero-highlights hero-highlights--stacked">
@@ -257,7 +243,7 @@ onMounted(() => {
       </div>
       <div v-else-if="recommendedLocations.length === 0" class="empty-state">
         <strong>표시할 장소가 아직 없습니다.</strong>
-        <p>백엔드에서 데이터를 불러오면 여기서 바로 확인할 수 있습니다.</p>
+        <p>지금은 추천 장소를 준비 중입니다. 잠시 후 다시 확인해 주세요.</p>
       </div>
       <div v-else class="card-list">
         <article
@@ -309,19 +295,5 @@ onMounted(() => {
       </article>
     </section>
 
-    <section class="section-card section-block" v-if="health">
-      <div class="section-heading">
-        <div>
-          <p class="section-label">연결 상태</p>
-          <h2>백엔드 응답 확인</h2>
-        </div>
-      </div>
-      <div class="health-panel">
-        <strong>
-          {{ health.status === 'ok' ? '백엔드 연결이 정상입니다.' : '백엔드 연결을 확인해 주세요.' }}
-        </strong>
-        <p>{{ health.message || 'FastAPI health endpoint가 응답하고 있습니다.' }}</p>
-      </div>
-    </section>
   </div>
 </template>
