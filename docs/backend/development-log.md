@@ -55,3 +55,16 @@
 - 검증
   - 올바른 비밀번호 수정 성공(200) 확인
   - 비밀번호 누락(400), 불일치(403), 미존재 ID(404) 확인
+
+### API: DELETE /api/posts/{post_id}
+- 구현 파일
+  - `backend/app/routers/posts.py`
+  - `backend/app/services/post_service.py`
+  - `backend/app/schemas/post.py`
+  - `docs/backend/api.md`
+- 작업 내용
+  - 게시글 삭제 API 추가
+  - 삭제 비밀번호 누락/불일치/게시글 미존재 케이스 구분 응답
+- 검증
+  - 올바른 비밀번호 삭제 성공(200) 확인
+  - 비밀번호 누락(400), 불일치(403), 미존재 ID(404) 확인

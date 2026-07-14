@@ -93,6 +93,46 @@
 }
 ```
 
+## 5) Delete Post
+- Method: `DELETE`
+- Path: `/api/posts/{post_id}`
+- Description: 수정용 비밀번호를 검증한 뒤 게시글을 삭제합니다.
+
+### Request Body
+```json
+{
+  "edit_password": "1234"
+}
+```
+
+### Success Response
+- Status: `200 OK`
+```json
+{
+  "message": "Post deleted"
+}
+```
+
+### Error Responses
+- Status: `400 Bad Request`
+```json
+{
+  "detail": "Edit password is required"
+}
+```
+- Status: `403 Forbidden`
+```json
+{
+  "detail": "Edit password mismatch"
+}
+```
+- Status: `404 Not Found`
+```json
+{
+  "detail": "Post not found"
+}
+```
+
 ### Success Response
 - Status: `200 OK`
 ```json

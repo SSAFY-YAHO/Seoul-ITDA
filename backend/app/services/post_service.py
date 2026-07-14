@@ -72,3 +72,16 @@ def update_post(db: Session, post_id: int, payload: PostUpdateRequest) -> Post:
     db.commit()
     db.refresh(post)
     return post
+
+
+def delete_post(db: Session, post_id: int, edit_password: str | None) -> None:
+    post = get_post_or_none(db, post_id)
+    if post is None:
+        raise PostNotFoundError()
+    if edit_password is None or edit_password.strip() == '':
+        raise PasswordRequiredError()
+    if edit_password != post.edit_password:
+        raise PasswordMismatchError()
+
+    db.delete(post)
+    db.commit()

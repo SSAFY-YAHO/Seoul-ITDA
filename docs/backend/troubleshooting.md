@@ -17,3 +17,9 @@
 - 원인: Git Bash 환경에서 JSON 인용부호 이스케이프가 깨짐
 - 조치: Python `urllib.request`로 JSON 직렬화 후 요청
 - 상태: 정상 요청/응답 확인 완료
+
+## 2026-07-14: 라우터 확장 중 import 누락
+- 증상: 신규 delete 엔드포인트 연결 시 함수 참조 오류 가능성 확인
+- 원인: `delete_post` 서비스 import 누락
+- 조치: `backend/app/routers/posts.py`에 `delete_post` import 추가
+- 상태: 삭제 API 정상 호출 확인 완료
