@@ -18,6 +18,7 @@ const error = ref("");
 const festivalItems = ref([]);
 const festivalTotal = ref(0);
 const selectedFestival = ref(null);
+const festivalCalendarRef = ref(null);
 const filters = ref({
   keyword: "",
   status: "",
@@ -25,6 +26,9 @@ const filters = ref({
   endDate: "",
 });
 const currentMonth = ref(new Date());
+const initialCalendarDate = computed(() =>
+  `${currentMonth.value.getFullYear()}-${String(currentMonth.value.getMonth() + 1).padStart(2, "0")}-${String(currentMonth.value.getDate()).padStart(2, "0")}`,
+);
 
 function getFestivalStatus(item) {
   const parsed = parseFestivalDateRange(item);
@@ -32,7 +36,8 @@ function getFestivalStatus(item) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const end = new Date(parsed.end);
-  end.setHours(0, 0, 0, 0);
+  end.setDate(end.getDate() - 1);
+  end.setHours(23, 59, 59, 999);
   if (today < parsed.start) return "upcoming";
   if (today > end) return "ended";
   return "ongoing";
@@ -134,16 +139,15 @@ async function loadFestivals() {
 }
 
 function goToToday() {
-  currentMonth.value = new Date();
+  festivalCalendarRef.value?.goToToday();
 }
 
 function changeMonth(step) {
-  const nextMonth = new Date(
-    currentMonth.value.getFullYear(),
-    currentMonth.value.getMonth() + step,
-    1,
-  );
-  currentMonth.value = nextMonth;
+  if (step < 0) {
+    festivalCalendarRef.value?.goToPreviousMonth();
+  } else if (step > 0) {
+    festivalCalendarRef.value?.goToNextMonth();
+  }
 }
 
 function syncCurrentMonth(date) {
@@ -249,10 +253,11 @@ onMounted(() => {
       </div>
       <div v-else class="festival-calendar-layout">
         <FestivalCalendar
+          ref="festivalCalendarRef"
           :events="visibleEvents"
           :loading="loading"
           :error="error"
-          :initial-date="currentMonth.toISOString().slice(0, 10)"
+          :initial-date="initialCalendarDate"
           @event-click="(event) => openFestival(event.extendedProps.originalData)"
           @month-change="syncCurrentMonth"
           @date-click="() => {}"

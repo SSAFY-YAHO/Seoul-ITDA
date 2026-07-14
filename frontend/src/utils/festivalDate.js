@@ -32,6 +32,13 @@ function normalizeDateValue(value) {
   return null
 }
 
+function toLocalDateString(value) {
+  const year = value.getFullYear()
+  const month = String(value.getMonth() + 1).padStart(2, '0')
+  const day = String(value.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
 export function parseFestivalDateRange(item) {
   const startRaw = item?.startDate || item?.start_date || item?.start || item?.eventStartDate || item?.event_start_date
   const endRaw = item?.endDate || item?.end_date || item?.end || item?.eventEndDate || item?.event_end_date
@@ -62,7 +69,9 @@ export function formatFestivalPeriod(item) {
   }
 
   const start = parsed.start.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })
-  const end = parsed.end.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })
+  const inclusiveEnd = new Date(parsed.end)
+  inclusiveEnd.setDate(inclusiveEnd.getDate() - 1)
+  const end = inclusiveEnd.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })
   return `${start} ~ ${end}`
 }
 
@@ -75,8 +84,8 @@ export function toCalendarEvent(item, index) {
   return {
     id: item?.id || item?.festivalId || item?.festival_id || `${item?.title || 'festival'}-${index}`,
     title: item?.title || item?.name || item?.festivalName || '축제',
-    start: parsed.start.toISOString().slice(0, 10),
-    end: parsed.end.toISOString().slice(0, 10),
+    start: toLocalDateString(parsed.start),
+    end: toLocalDateString(parsed.end),
     allDay: true,
     extendedProps: {
       place: item?.place || item?.venue || item?.location || '',

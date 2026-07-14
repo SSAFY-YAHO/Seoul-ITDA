@@ -2,7 +2,7 @@
 import FullCalendar from "@fullcalendar/vue3";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
-import { computed, ref, watch } from "vue";
+import { computed, ref } from "vue";
 
 const props = defineProps({
   events: Array,
@@ -13,6 +13,24 @@ const props = defineProps({
 
 const emit = defineEmits(["date-click", "event-click", "month-change"]);
 const calendarRef = ref(null);
+
+function getCalendarApi() {
+  return calendarRef.value?.getApi();
+}
+
+function goToToday() {
+  getCalendarApi()?.today();
+}
+
+function goToPreviousMonth() {
+  getCalendarApi()?.prev();
+}
+
+function goToNextMonth() {
+  getCalendarApi()?.next();
+}
+
+defineExpose({ goToToday, goToPreviousMonth, goToNextMonth });
 
 function getEventTone(event) {
   const source = `${event.id}-${event.title}`;
@@ -62,26 +80,6 @@ const calendarOptions = computed(() => ({
     return { html: `<span class="fc-event-title">${title}</span>` };
   },
 }));
-
-watch(
-  () => props.initialDate,
-  (date) => {
-    if (!date) return;
-
-    const calendarApi = calendarRef.value?.getApi();
-    if (!calendarApi) return;
-
-    const targetDate = new Date(`${date}T00:00:00`);
-    const displayedDate = calendarApi.getDate();
-    const isSameMonth =
-      targetDate.getFullYear() === displayedDate.getFullYear() &&
-      targetDate.getMonth() === displayedDate.getMonth();
-
-    if (!isSameMonth) {
-      calendarApi.gotoDate(targetDate);
-    }
-  },
-);
 </script>
 
 <template>
