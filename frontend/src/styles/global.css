@@ -246,6 +246,57 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 .search-row { display: flex; gap: 0.7rem; flex-wrap: wrap; margin-bottom: 1rem; }
 .search-row .input { flex: 1; min-width: 220px; }
 .home-dual-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.home-location-track { transition: opacity 0.2s ease; }
+.home-guide-modal { width: min(96vw, 920px); }
+.guide-map-layout {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 1rem;
+}
+.guide-map-wrap {
+  border: 1px solid rgba(122, 102, 72, 0.12);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.9);
+  min-height: 360px;
+}
+.guide-map-frame {
+  width: 100%;
+  height: 100%;
+  min-height: 360px;
+  border: 0;
+}
+.guide-location-list {
+  display: grid;
+  gap: 0.6rem;
+  max-height: 360px;
+  overflow-y: auto;
+  padding-right: 0.2rem;
+}
+.guide-location-item {
+  display: grid;
+  gap: 0.35rem;
+  align-content: start;
+  text-align: left;
+  padding: 0.8rem;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(122, 102, 72, 0.12);
+  background: rgba(255, 255, 255, 0.9);
+}
+.guide-location-item strong { color: var(--color-text-main); }
+.guide-location-item span {
+  color: var(--color-text-sub);
+  font-size: 0.9rem;
+}
+.guide-location-item--active {
+  border-color: rgba(230, 190, 123, 0.65);
+  background: rgba(253, 246, 238, 0.98);
+}
+.guide-festival-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+}
 .chatbot-widget { position: fixed; right: 1rem; bottom: 1rem; z-index: 30; }
 .chatbot-toggle {
   display: inline-flex;
@@ -307,6 +358,8 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
   .hero-copy h1 { max-width: none; }
   .hero-highlights--stacked { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .home-dual-grid { grid-template-columns: 1fr; }
+  .guide-map-layout,
+  .guide-festival-list { grid-template-columns: 1fr; }
   .festival-filter__controls { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 640px) {
