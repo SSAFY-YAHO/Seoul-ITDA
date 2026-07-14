@@ -1,119 +1,260 @@
 <script setup>
-import { ref } from 'vue'
-import { apiBaseUrl, fetchHealth } from '../services/api'
+import { onMounted, ref } from "vue";
+import { useRouter } from "vue-router";
+import mascot from "../assets/mascot.svg";
+import { fetchLocations } from "../api/locations";
+import { getHealth } from "../api/client";
 
-const healthState = ref('아직 확인하지 않음')
-const healthPayload = ref('')
-const isChecking = ref(false)
+const router = useRouter();
+const locations = ref([]);
+const loading = ref(true);
+const error = ref("");
+const health = ref(null);
 
-async function checkBackend() {
-  isChecking.value = true
-  healthState.value = '확인 중'
+const categories = [
+  { key: "tourist", label: "관광지", tone: "badge--blue" },
+  { key: "festival", label: "축제", tone: "badge--yellow" },
+  { key: "restaurant", label: "맛집", tone: "badge--mint" },
+];
+
+function getCategoryLabel(category) {
+  return (
+    categories.find((item) => item.key === category)?.label ||
+    category ||
+    "정보"
+  );
+}
+
+function getCategoryTone(category) {
+  return (
+    categories.find((item) => item.key === category)?.tone || "badge--blue"
+  );
+}
+
+function formatLocationAddress(location) {
+  return (
+    location.address ||
+    location.road_address ||
+    "주소 정보가 아직 제공되지 않습니다."
+  );
+}
+
+function formatLocationDescription(location) {
+  return (
+    location.description || location.summary || "상세 설명은 준비 중입니다."
+  );
+}
+
+async function loadLocations() {
+  loading.value = true;
+  error.value = "";
 
   try {
-    const payload = await fetchHealth()
-    healthState.value = '연결 성공'
-    healthPayload.value = JSON.stringify(payload, null, 2)
-  } catch (error) {
-    healthState.value = '연결 실패'
-    healthPayload.value = error instanceof Error ? error.message : '알 수 없는 오류'
+    const data = await fetchLocations();
+    const items = Array.isArray(data) ? data : data?.items || [];
+    locations.value = items;
+  } catch (err) {
+    error.value = err.message || "서울 정보를 불러오지 못했습니다.";
   } finally {
-    isChecking.value = false
+    loading.value = false;
   }
 }
+
+async function loadHealth() {
+  try {
+    health.value = await getHealth();
+  } catch (err) {
+    health.value = {
+      status: "error",
+      message: err.message || "백엔드 연결을 확인해주세요.",
+    };
+  }
+}
+
+onMounted(() => {
+  loadLocations();
+  loadHealth();
+});
 </script>
 
 <template>
-  <section class="dashboard">
-    <article class="hero-card">
-      <p class="hero-card__lead">
-        지금 단계는 기능 구현 전 초기세팅입니다. 프론트와 백엔드가 같은 규칙으로 동작하도록
-        폴더 구조, 환경변수, 기본 라우팅, DB 설정, 상태 확인 API를 먼저 고정해둔 상태입니다.
-      </p>
-
-      <div class="hero-card__grid">
-        <div class="info-card">
-          <span>Frontend</span>
-          <strong>Vue 3 + Vite</strong>
-          <p>SPA 구조와 라우터, API 서비스 레이어를 미리 분리했습니다.</p>
+  <div class="page-shell">
+    <section class="hero-section section-card">
+      <div class="hero-copy">
+        <span class="badge badge--yellow">서울잇다</span>
+        <h1>서울의 이야기를 발견하고 연결하세요</h1>
+        <p>관광지, 축제, 맛집, 그리고 익명 커뮤니티를 한 곳에서 만나보세요.</p>
+        <div class="hero-actions">
+          <button
+            class="btn btn--primary"
+            type="button"
+            @click="router.push('/festivals')"
+          >
+            축제 캘린더 보기
+          </button>
+          <button
+            class="btn btn--secondary"
+            type="button"
+            @click="router.push('/posts')"
+          >
+            커뮤니티 가기
+          </button>
         </div>
-        <div class="info-card">
-          <span>Backend</span>
-          <strong>FastAPI + SQLAlchemy</strong>
-          <p>SQLite 연결과 CORS 설정, 기본 엔드포인트가 준비되어 있습니다.</p>
-        </div>
-        <div class="info-card">
-          <span>Environment</span>
-          <strong>.env 중심 설정</strong>
-          <p>실제 키는 `.env`, 저장소에는 `.env.example`만 유지합니다.</p>
+        <div class="hero-highlights">
+          <div class="highlight-pill">실시간 서울 정보</div>
+          <div class="highlight-pill">익명 커뮤니티</div>
+          <div class="highlight-pill">AI 챗봇</div>
         </div>
       </div>
-    </article>
+      <div class="hero-visual">
+        <img :src="mascot" alt="서울잇다 마스코트" />
+      </div>
+    </section>
 
-    <section class="section">
-      <div class="section-header">
+    <section class="section-card section-block">
+      <div class="section-heading">
         <div>
-          <h2>초기 작업 상태</h2>
-          <p>기능 개발 전에 바로 확인할 수 있는 공통 베이스입니다.</p>
+          <p class="section-label">카테고리</p>
+          <h2>서울을 주제로 한 정보들</h2>
         </div>
-        <span class="section-badge">Scaffold Ready</span>
       </div>
-
-      <div class="status-grid">
-        <div class="status-card">
-          <span>Community</span>
-          <strong>예정</strong>
-          <p>익명 게시판 CRUD, 검색, 조회수 기능은 다음 단계에서 추가합니다.</p>
-        </div>
-        <div class="status-card">
-          <span>Chat</span>
-          <strong>예정</strong>
-          <p>서울 JSON과 커뮤니티 데이터를 연결한 `POST /api/chat`을 이후 구현합니다.</p>
-        </div>
-        <div class="status-card">
-          <span>Data</span>
-          <strong>수용 준비</strong>
-          <p>`data/`와 `backend/app/services/`에 적재 및 정제 로직을 붙일 수 있게 비워뒀습니다.</p>
+      <div class="category-grid">
+        <div
+          v-for="category in categories"
+          :key="category.key"
+          class="category-card"
+        >
+          <span :class="['badge', category.tone]">{{ category.label }}</span>
+          <p>
+            {{
+              category.key === "tourist"
+                ? "도심 속 숨은 명소와 역사 문화 코스를 확인하세요."
+                : category.key === "festival"
+                  ? "시즌별 축제와 행사 정보를 빠르게 살펴보세요."
+                  : "서울 맛집과 분위기 좋은 식당을 둘러보세요."
+            }}
+          </p>
         </div>
       </div>
     </section>
 
-    <section class="section">
-      <div class="section-header">
+    <section class="section-card section-block">
+      <div class="section-heading">
         <div>
-          <h2>백엔드 연결 확인</h2>
-          <p>프론트에서 FastAPI가 뜨는지 즉시 확인할 수 있습니다.</p>
+          <p class="section-label">서울 정보</p>
+          <h2>지역 정보 카드</h2>
         </div>
-      </div>
-
-      <div class="status-grid">
-        <div class="api-card">
-          <span>API Base URL</span>
-          <strong>{{ apiBaseUrl }}</strong>
-          <p>`.env`의 `VITE_API_BASE_URL`로 변경할 수 있습니다.</p>
-          <code>GET /api/health</code>
-        </div>
-        <div class="api-card">
-          <span>Health State</span>
-          <strong>{{ healthState }}</strong>
-          <p>버튼을 눌러 현재 백엔드 응답을 확인하세요.</p>
-        </div>
-        <div class="api-card">
-          <span>Next Step</span>
-          <strong>기능 개발 시작</strong>
-          <p>이 상태에서 게시판 모델, 라우터, 뷰를 차례대로 확장하면 됩니다.</p>
-        </div>
-      </div>
-
-      <div class="health-banner">
-        <div>
-          <strong>FastAPI 상태 체크</strong>
-          <pre>{{ healthPayload || '아직 요청 결과가 없습니다.' }}</pre>
-        </div>
-        <button type="button" :disabled="isChecking" @click="checkBackend">
-          {{ isChecking ? '확인 중...' : '연결 확인' }}
+        <button
+          class="btn btn--ghost"
+          type="button"
+          @click="router.push('/posts')"
+        >
+          커뮤니티 보기
         </button>
       </div>
+
+      <div v-if="loading" class="loading-state">
+        <strong>서울 정보를 불러오는 중입니다.</strong>
+        <p>잠시만 기다려 주세요.</p>
+      </div>
+      <div v-else-if="error" class="error-state">
+        <strong>서울 정보를 불러오지 못했습니다.</strong>
+        <p>{{ error }}</p>
+        <button class="btn btn--secondary" type="button" @click="loadLocations">
+          다시 시도
+        </button>
+      </div>
+      <div v-else-if="locations.length === 0" class="empty-state">
+        <strong>표시할 서울 정보가 없습니다.</strong>
+        <p>백엔드에 지역 정보가 준비되면 여기에서 확인할 수 있습니다.</p>
+      </div>
+      <div v-else class="card-list">
+        <article
+          v-for="location in locations"
+          :key="location.id || location.name"
+          class="location-card"
+        >
+          <div class="location-card__header">
+            <span :class="['badge', getCategoryTone(location.category)]">{{
+              getCategoryLabel(location.category)
+            }}</span>
+            <h3>{{ location.name || location.title || "이름 미정" }}</h3>
+          </div>
+          <p>{{ formatLocationDescription(location) }}</p>
+          <p class="helper-text">{{ formatLocationAddress(location) }}</p>
+          <div v-if="location.operating_hours" class="meta-row">
+            <span>운영 정보</span>
+            <strong>{{ location.operating_hours }}</strong>
+          </div>
+        </article>
+      </div>
     </section>
-  </section>
+
+    <section class="section-card section-block">
+      <div class="section-heading">
+        <div>
+          <p class="section-label">이번 달 축제</p>
+          <h2>서울 축제 미리보기</h2>
+        </div>
+        <button
+          class="btn btn--ghost btn--small"
+          type="button"
+          @click="router.push('/festivals')"
+        >
+          캘린더 전체 보기
+        </button>
+      </div>
+      <div class="ai-card">
+        <div class="ai-card__title">
+          <span class="badge badge--orange">AI 추천</span>
+          <h3>이번 달 서울 축제를 미리 둘러보세요</h3>
+        </div>
+        <p>
+          축제 캘린더 페이지에서 월별 일정과 상세 정보를 확인할 수 있습니다.
+        </p>
+        <p class="helper-text">
+          현재 저장소의 축제 데이터가 준비되면 자동으로 반영됩니다.
+        </p>
+      </div>
+    </section>
+
+    <section class="section-card section-block">
+      <div class="section-heading">
+        <div>
+          <p class="section-label">커뮤니티</p>
+          <h2>익명으로 나누는 서울 이야기</h2>
+        </div>
+        <button
+          class="btn btn--primary"
+          type="button"
+          @click="router.push('/posts')"
+        >
+          게시글 보기
+        </button>
+      </div>
+      <p class="helper-text">
+        현재 백엔드에 게시글 API가 아직 없으므로, 이 화면은 목록 진입과 안내
+        문구 중심으로 구성했습니다. 게시글 기능이 준비되면 바로 연결됩니다.
+      </p>
+    </section>
+
+    <section class="section-card section-block" v-if="health">
+      <div class="section-heading">
+        <div>
+          <p class="section-label">백엔드 상태</p>
+          <h2>연결 상태 확인</h2>
+        </div>
+      </div>
+      <div class="health-panel">
+        <strong>{{
+          health.status === "ok"
+            ? "백엔드 연결이 정상입니다."
+            : "백엔드 연결을 확인해 주세요."
+        }}</strong>
+        <p>
+          {{ health.message || "FastAPI health endpoint가 응답하고 있습니다." }}
+        </p>
+      </div>
+    </section>
+  </div>
 </template>
