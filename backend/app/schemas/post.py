@@ -25,3 +25,9 @@ class PostResponse(BaseModel):
 class PostListResponse(BaseModel):
     items: list[PostResponse]
     total: int
+
+
+class PostUpdateRequest(BaseModel):
+    title: str = Field(min_length=1, max_length=200)
+    content: str = Field(min_length=1)
+    edit_password: str | None = None

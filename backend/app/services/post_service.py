@@ -4,7 +4,19 @@ from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.models.post import Post
-from app.schemas.post import PostCreateRequest
+from app.schemas.post import PostCreateRequest, PostUpdateRequest
+
+
+class PostNotFoundError(Exception):
+    pass
+
+
+class PasswordRequiredError(Exception):
+    pass
+
+
+class PasswordMismatchError(Exception):
+    pass
 
 
 def create_post(db: Session, payload: PostCreateRequest) -> Post:
@@ -41,6 +53,22 @@ def get_post_and_increase_views(db: Session, post_id: int) -> Post | None:
     if post is None:
         return None
     post.views += 1
+    db.commit()
+    db.refresh(post)
+    return post
+
+
+def update_post(db: Session, post_id: int, payload: PostUpdateRequest) -> Post:
+    post = get_post_or_none(db, post_id)
+    if post is None:
+        raise PostNotFoundError()
+    if payload.edit_password is None or payload.edit_password.strip() == '':
+        raise PasswordRequiredError()
+    if payload.edit_password != post.edit_password:
+        raise PasswordMismatchError()
+
+    post.title = payload.title
+    post.content = payload.content
     db.commit()
     db.refresh(post)
     return post

@@ -42,3 +42,16 @@
 - 검증
   - 동일 게시글 2회 조회 시 `views`가 1씩 증가하는지 확인
   - 없는 ID 조회 시 404 응답 확인
+
+### API: PUT /api/posts/{post_id}
+- 구현 파일
+  - `backend/app/routers/posts.py`
+  - `backend/app/services/post_service.py`
+  - `backend/app/schemas/post.py`
+  - `docs/backend/api.md`
+- 작업 내용
+  - 게시글 수정 API 추가
+  - 수정 비밀번호 누락/불일치/게시글 미존재 케이스를 구분 응답
+- 검증
+  - 올바른 비밀번호 수정 성공(200) 확인
+  - 비밀번호 누락(400), 불일치(403), 미존재 ID(404) 확인

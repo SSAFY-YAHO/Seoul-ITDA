@@ -79,6 +79,53 @@
 }
 ```
 
+## 4) Update Post
+- Method: `PUT`
+- Path: `/api/posts/{post_id}`
+- Description: 수정용 비밀번호를 검증한 뒤 게시글을 수정합니다.
+
+### Request Body
+```json
+{
+  "title": "수정된 제목",
+  "content": "수정된 내용",
+  "edit_password": "1234"
+}
+```
+
+### Success Response
+- Status: `200 OK`
+```json
+{
+  "id": 2,
+  "title": "수정된 제목",
+  "content": "수정된 내용",
+  "views": 2,
+  "created_at": "2026-07-14T10:00:00",
+  "updated_at": "2026-07-14T10:10:00"
+}
+```
+
+### Error Responses
+- Status: `400 Bad Request`
+```json
+{
+  "detail": "Edit password is required"
+}
+```
+- Status: `403 Forbidden`
+```json
+{
+  "detail": "Edit password mismatch"
+}
+```
+- Status: `404 Not Found`
+```json
+{
+  "detail": "Post not found"
+}
+```
+
 ### Error Response
 - Status: `404 Not Found`
 ```json

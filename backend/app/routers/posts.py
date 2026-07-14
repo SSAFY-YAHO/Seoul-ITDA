@@ -4,8 +4,16 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.schemas.post import PostCreateRequest, PostListResponse, PostResponse
-from app.services.post_service import create_post, get_post_and_increase_views, list_posts
+from app.schemas.post import PostCreateRequest, PostListResponse, PostResponse, PostUpdateRequest
+from app.services.post_service import (
+    PasswordMismatchError,
+    PasswordRequiredError,
+    PostNotFoundError,
+    create_post,
+    get_post_and_increase_views,
+    list_posts,
+    update_post,
+)
 
 
 router = APIRouter(prefix='/api/posts', tags=['posts'])
@@ -31,3 +39,15 @@ def get_post_detail_api(post_id: int, db: Session = Depends(get_db)):
     if post is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Post not found')
     return post
+
+
+@router.put('/{post_id}', response_model=PostResponse)
+def update_post_api(post_id: int, payload: PostUpdateRequest, db: Session = Depends(get_db)):
+    try:
+        return update_post(db, post_id, payload)
+    except PostNotFoundError:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Post not found') from None
+    except PasswordRequiredError:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Edit password is required') from None
+    except PasswordMismatchError:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail='Edit password mismatch') from None
