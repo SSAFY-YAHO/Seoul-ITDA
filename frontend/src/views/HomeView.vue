@@ -55,17 +55,27 @@ const activeGuideTitle = computed(() => {
   return "빠른 안내";
 });
 
-const mapEmbedUrl = computed(() => {
+const selectedLocationQuery = computed(() => {
   if (!selectedMapLocation.value) return "";
 
-  const query = [
+  return [
     selectedMapLocation.value.name || selectedMapLocation.value.title || "",
     formatLocationAddress(selectedMapLocation.value),
   ]
     .filter(Boolean)
     .join(" ");
+});
 
-  return `https://maps.google.com/maps?q=${encodeURIComponent(query)}&z=14&output=embed`;
+const mapEmbedUrl = computed(() => {
+  if (!selectedLocationQuery.value) return "";
+
+  return `https://maps.google.com/maps?q=${encodeURIComponent(selectedLocationQuery.value)}&z=14&output=embed`;
+});
+
+const naverMapUrl = computed(() => {
+  if (!selectedLocationQuery.value) return "";
+
+  return `https://map.naver.com/p/search/${encodeURIComponent(selectedLocationQuery.value)}`;
 });
 
 const nearestFestivals = computed(() => {
@@ -410,6 +420,15 @@ watch([recommendedLocations, cardsPerView], () => {
                   loading="lazy"
                   referrerpolicy="no-referrer-when-downgrade"
                 />
+                <a
+                  v-if="naverMapUrl"
+                  class="btn btn--primary guide-map-link"
+                  :href="naverMapUrl"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  네이버 지도에서 열기
+                </a>
               </div>
               <div class="guide-location-list">
                 <button
