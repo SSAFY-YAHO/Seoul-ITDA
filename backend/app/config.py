@@ -38,7 +38,7 @@ class Settings:
         os.getenv('DATABASE_URL', 'sqlite:///./backend/localhub.db')
     )
     seoul_data_path: str = os.getenv('SEOUL_DATA_PATH', 'data')
-    chat_ai_provider: str = os.getenv('CHAT_AI_PROVIDER', 'auto')
+    chat_ai_provider: str = os.getenv('CHAT_AI_PROVIDER', 'openai')
     local_ai_base_url: str = os.getenv('LOCAL_AI_BASE_URL', 'http://localhost:11434')
     local_ai_model: str = os.getenv('LOCAL_AI_MODEL', 'llama3.1:8b')
     local_ai_timeout_sec: int = int(os.getenv('LOCAL_AI_TIMEOUT_SEC', '30'))
