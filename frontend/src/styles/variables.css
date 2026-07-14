@@ -18,7 +18,11 @@
   --radius-md: 22px;
   --radius-sm: 16px;
   --radius-pill: 999px;
-  --container-width: min(1180px, calc(100% - 2rem));
+  /* 페이지 레이아웃 변수: 최대 너비, 반응형 가터, 섹션 간격 */
+  --page-max-width: 1440px;
+  --page-gutter: 48px;
+  --section-gap: clamp(24px, 3vw, 40px);
+  --container-width: var(--page-max-width);
   font-family: 'Pretendard', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
   line-height: 1.55;
   font-weight: 400;
@@ -28,4 +32,16 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+@media (max-width: 1199px) {
+  :root {
+    --page-gutter: 32px;
+  }
+}
+
+@media (max-width: 640px) {
+  :root {
+    --page-gutter: 16px;
+  }
 }
