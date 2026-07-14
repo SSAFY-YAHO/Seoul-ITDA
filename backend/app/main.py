@@ -7,7 +7,9 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
 from app.database import Base, engine
+from app.models import Post
 from app.routers.health import router as health_router
+from app.routers.posts import router as posts_router
 
 
 @asynccontextmanager
@@ -27,6 +29,7 @@ app.add_middleware(
 )
 
 app.include_router(health_router)
+app.include_router(posts_router)
 
 
 @app.get('/')
