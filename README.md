@@ -44,6 +44,10 @@ cd backend
 ../.venv/Scripts/python -m uvicorn app.main:app --reload
 ```
 
+`DATABASE_URL=sqlite:///./backend/localhub.db` is resolved relative to the repository root by the app,
+so the backend can be started from either the repo root or the `backend/` directory without breaking
+data loading.
+
 ## 기본 엔드포인트
 
 - `GET /` : 앱 메타 정보
