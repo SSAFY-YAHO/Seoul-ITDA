@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import brandMark from "../assets/mascot.png";
 import { fetchLocations } from "../api/locations";
@@ -15,8 +15,12 @@ const selectedMapLocation = ref(null);
 const festivalItems = ref([]);
 const festivalLoading = ref(false);
 const festivalError = ref("");
-const viewportWidth = ref(typeof window !== "undefined" ? window.innerWidth : 1200);
-const locationSlideIndex = ref(0);
+const locationTrackRef = ref(null);
+const canScrollLocationPrev = ref(false);
+const canScrollLocationNext = ref(false);
+const isDraggingLocations = ref(false);
+let locationDragStartX = 0;
+let locationDragStartScrollLeft = 0;
 
 const guideCards = [
   {
@@ -34,20 +38,6 @@ const guideCards = [
 ];
 
 const recommendedLocations = computed(() => locations.value);
-const cardsPerView = computed(() => {
-  if (viewportWidth.value < 640) return 1;
-  if (viewportWidth.value < 920) return 2;
-  return 3;
-});
-const maxLocationSlideIndex = computed(() =>
-  Math.max(0, recommendedLocations.value.length - cardsPerView.value),
-);
-const visibleLocations = computed(() =>
-  recommendedLocations.value.slice(
-    locationSlideIndex.value,
-    locationSlideIndex.value + cardsPerView.value,
-  ),
-);
 
 const activeGuideTitle = computed(() => {
   if (activeGuide.value === "tour") return "관광지 먼저 보기";
@@ -160,19 +150,56 @@ function getFestivalPlace(festival) {
   return festival.place || festival.venue || festival.location || "장소 정보 미정";
 }
 
-function updateViewportWidth() {
-  viewportWidth.value = window.innerWidth;
+function updateLocationScrollState() {
+  const track = locationTrackRef.value;
+  if (!track) return;
+
+  const maxScrollLeft = Math.max(0, track.scrollWidth - track.clientWidth);
+  canScrollLocationPrev.value = track.scrollLeft > 2;
+  canScrollLocationNext.value = track.scrollLeft < maxScrollLeft - 2;
 }
 
-function prevLocationPage() {
-  locationSlideIndex.value = Math.max(0, locationSlideIndex.value - 1);
+function scrollLocationTrack(direction) {
+  const track = locationTrackRef.value;
+  if (!track) return;
+
+  const firstCard = track.firstElementChild;
+  const gap = Number.parseFloat(getComputedStyle(track).columnGap) || 0;
+  const distance = firstCard ? firstCard.getBoundingClientRect().width + gap : track.clientWidth;
+  track.scrollBy({ left: direction * distance, behavior: "smooth" });
 }
 
-function nextLocationPage() {
-  locationSlideIndex.value = Math.min(
-    maxLocationSlideIndex.value,
-    locationSlideIndex.value + 1,
-  );
+function startLocationDrag(event) {
+  if (event.pointerType === "mouse" && event.button !== 0) return;
+
+  const track = locationTrackRef.value;
+  if (!track) return;
+
+  isDraggingLocations.value = true;
+  locationDragStartX = event.clientX;
+  locationDragStartScrollLeft = track.scrollLeft;
+  track.setPointerCapture(event.pointerId);
+}
+
+function moveLocationDrag(event) {
+  if (!isDraggingLocations.value) return;
+
+  const track = locationTrackRef.value;
+  if (!track) return;
+
+  track.scrollLeft = locationDragStartScrollLeft - (event.clientX - locationDragStartX);
+  event.preventDefault();
+}
+
+function endLocationDrag(event) {
+  if (!isDraggingLocations.value) return;
+
+  const track = locationTrackRef.value;
+  isDraggingLocations.value = false;
+  if (track?.hasPointerCapture(event.pointerId)) {
+    track.releasePointerCapture(event.pointerId);
+  }
+  updateLocationScrollState();
 }
 
 function selectMapLocation(location) {
@@ -217,6 +244,8 @@ async function loadLocations() {
   try {
     const data = await fetchLocations();
     locations.value = Array.isArray(data) ? data : data?.items || [];
+    await nextTick();
+    updateLocationScrollState();
   } catch (err) {
     error.value = err.message || "서울 정보를 불러오지 못했습니다.";
     locations.value = [];
@@ -227,17 +256,14 @@ async function loadLocations() {
 
 onMounted(() => {
   loadLocations();
-  window.addEventListener("resize", updateViewportWidth);
+  window.addEventListener("resize", updateLocationScrollState);
 });
 
 onBeforeUnmount(() => {
-  window.removeEventListener("resize", updateViewportWidth);
+  window.removeEventListener("resize", updateLocationScrollState);
 });
 
-watch([recommendedLocations, cardsPerView], () => {
-  if (locationSlideIndex.value > maxLocationSlideIndex.value) {
-    locationSlideIndex.value = maxLocationSlideIndex.value;
-  }
+watch(recommendedLocations, () => {
   if (!selectedMapLocation.value && recommendedLocations.value.length > 0) {
     selectedMapLocation.value = recommendedLocations.value[0];
   }
@@ -336,16 +362,16 @@ watch([recommendedLocations, cardsPerView], () => {
           <button
             class="btn btn--secondary btn--small"
             type="button"
-            :disabled="locationSlideIndex === 0"
-            @click="prevLocationPage"
+            :disabled="!canScrollLocationPrev"
+            @click="scrollLocationTrack(-1)"
           >
             이전
           </button>
           <button
             class="btn btn--secondary btn--small"
             type="button"
-            :disabled="locationSlideIndex >= maxLocationSlideIndex"
-            @click="nextLocationPage"
+            :disabled="!canScrollLocationNext"
+            @click="scrollLocationTrack(1)"
           >
             다음
           </button>
@@ -367,9 +393,19 @@ watch([recommendedLocations, cardsPerView], () => {
         <strong>표시할 장소가 아직 없습니다.</strong>
         <p>지금은 추천 장소를 준비 중입니다. 잠시 후 다시 확인해 주세요.</p>
       </div>
-      <div v-else class="card-list home-location-track">
+      <div
+        v-else
+        ref="locationTrackRef"
+        class="home-location-track"
+        :class="{ 'home-location-track--dragging': isDraggingLocations }"
+        @scroll="updateLocationScrollState"
+        @pointerdown="startLocationDrag"
+        @pointermove="moveLocationDrag"
+        @pointerup="endLocationDrag"
+        @pointercancel="endLocationDrag"
+      >
         <article
-          v-for="location in visibleLocations"
+          v-for="location in recommendedLocations"
           :key="location.id || location.name"
           class="location-card"
         >
