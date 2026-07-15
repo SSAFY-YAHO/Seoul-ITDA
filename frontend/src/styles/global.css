@@ -829,6 +829,20 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 .home-hero .hero-copy > p { color: #52645a; font-size: 1rem; }
 .home-hero .hero-visual { position: relative; z-index: 2; min-height: 520px; }
 .home-eyebrow { color: #62816c; }
+.app-main .home-hero .btn--primary {
+  border: 1px solid #3f725a;
+  background: #3f725a;
+  color: #fff;
+  box-shadow: 0 12px 26px rgba(48, 92, 67, .2);
+}
+.app-main .home-hero .btn--primary:hover { background: #315f4a; border-color: #315f4a; }
+.app-main .home-hero .btn--secondary {
+  border: 1px solid rgba(63, 114, 90, .28);
+  background: rgba(248, 250, 240, .94);
+  color: #365f4a;
+  box-shadow: 0 9px 22px rgba(48, 81, 62, .1);
+}
+.app-main .home-hero .btn--secondary:hover { background: #edf4df; border-color: #6e987f; }
 .btn--paper { background: #fbfcf7; color: #385d49; border: 1px solid rgba(47,80,62,.14); box-shadow: 0 8px 22px rgba(48,81,62,.08); }
 .btn--paper:hover { background: white; }
 .home-about {
