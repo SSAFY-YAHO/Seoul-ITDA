@@ -1,14 +1,13 @@
 <template>
   <footer class="app-footer">
-    <div class="container app-footer__inner">
-      <div>
-        <strong>서울잇다</strong>
-        <p>서울의 관광지, 축제, 맛집, 그리고 익명 커뮤니티를 가볍게 살펴보는 정보 허브입니다.</p>
+    <div class="container app-footer__inner story-footer">
+      <div class="story-footer__brand">
+        <strong>Seoul ITDA</strong>
+        <p>서울의 장소와 축제, 사람의 이야기를 다정하게 잇습니다.</p>
       </div>
-      <div class="footer-meta">
-        <span>여행 메모</span>
-        <p>마음에 드는 장소를 고르고, 축제와 후기를 함께 보며 서울 일정을 가볍게 정리해보세요.</p>
-      </div>
+      <div><b>메뉴</b><p>홈<br />축제 캘린더<br />커뮤니티</p></div>
+      <div><b>서비스</b><p>서울 명소<br />문화 행사<br />여행 후기</p></div>
+      <div><b>Contact</b><p>Seoul, Republic of Korea<br />hello@seoul-itda.kr</p></div>
     </div>
   </footer>
 </template>

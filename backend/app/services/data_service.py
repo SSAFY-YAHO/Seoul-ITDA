@@ -27,6 +27,13 @@ def _extract_district(addr1: str) -> str:
     return '미상'
 
 
+def _to_float(value: object) -> float | None:
+    try:
+        return float(str(value).strip())
+    except (TypeError, ValueError):
+        return None
+
+
 def _normalize_items(raw: object) -> tuple[list[dict], str]:
     if isinstance(raw, dict) and isinstance(raw.get('items'), list):
         content_type = str(raw.get('contentType', '')).strip()
@@ -75,6 +82,10 @@ def load_attractions_from_file(db: Session, file_path: str) -> dict[str, int | s
             addr1 = str(item.get('addr1', '')).strip()
             addr2 = str(item.get('addr2', '')).strip()
             tel = str(item.get('tel', '')).strip()
+            image_url = str(item.get('firstimage', '')).strip()
+            thumbnail_url = str(item.get('firstimage2', '')).strip()
+            longitude = _to_float(item.get('mapx'))
+            latitude = _to_float(item.get('mapy'))
 
             if not source_id or not name:
                 skipped += 1
@@ -109,6 +120,11 @@ def load_attractions_from_file(db: Session, file_path: str) -> dict[str, int | s
                     description=description,
                     address=address,
                     tags=tags,
+                    image_url=image_url,
+                    thumbnail_url=thumbnail_url,
+                    telephone=tel,
+                    longitude=longitude,
+                    latitude=latitude,
                 )
                 db.add(attraction)
                 loaded += 1
@@ -119,6 +135,11 @@ def load_attractions_from_file(db: Session, file_path: str) -> dict[str, int | s
                 attraction.description = description
                 attraction.address = address
                 attraction.tags = tags
+                attraction.image_url = image_url
+                attraction.thumbnail_url = thumbnail_url
+                attraction.telephone = tel
+                attraction.longitude = longitude
+                attraction.latitude = latitude
                 updated += 1
 
     db.commit()

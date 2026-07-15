@@ -16,16 +16,37 @@ from app.routers.health import router as health_router
 from app.routers.locations import router as locations_router
 from app.routers.posts import router as posts_router
 from app.services.data_service import load_attractions_from_file
+from sqlalchemy import inspect, text
+
+
+def ensure_attraction_detail_columns() -> None:
+    """기존 SQLite DB에도 상세 정보 컬럼을 비파괴 방식으로 추가한다."""
+    columns = {column['name'] for column in inspect(engine).get_columns('attractions')}
+    with engine.begin() as connection:
+        if 'image_url' not in columns:
+            connection.execute(text("ALTER TABLE attractions ADD COLUMN image_url VARCHAR(1000) NOT NULL DEFAULT ''"))
+        if 'thumbnail_url' not in columns:
+            connection.execute(text("ALTER TABLE attractions ADD COLUMN thumbnail_url VARCHAR(1000) NOT NULL DEFAULT ''"))
+        if 'telephone' not in columns:
+            connection.execute(text("ALTER TABLE attractions ADD COLUMN telephone VARCHAR(200) NOT NULL DEFAULT ''"))
+        if 'longitude' not in columns:
+            connection.execute(text("ALTER TABLE attractions ADD COLUMN longitude FLOAT"))
+        if 'latitude' not in columns:
+            connection.execute(text("ALTER TABLE attractions ADD COLUMN latitude FLOAT"))
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     Base.metadata.create_all(bind=engine)
+    ensure_attraction_detail_columns()
 
     session = SessionLocal()
     try:
         has_attractions = session.query(Attraction.id).first() is not None
-        if not has_attractions:
+        needs_image_sync = session.query(Attraction.id).filter(Attraction.image_url != '').first() is None
+        needs_contact_sync = session.query(Attraction.id).filter(Attraction.telephone != '').first() is None
+        needs_coordinate_sync = session.query(Attraction.id).filter(Attraction.longitude.is_not(None)).first() is None
+        if not has_attractions or needs_image_sync or needs_contact_sync or needs_coordinate_sync:
             default_data_path = Path(settings.root_dir) / settings.seoul_data_path
             try:
                 load_attractions_from_file(session, str(default_data_path))

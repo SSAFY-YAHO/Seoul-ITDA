@@ -42,8 +42,8 @@ onMounted(() => {
       <button class="brand" type="button" @click="router.push('/')">
         <img class="brand__icon" :src="brandMark" alt="서울잇다 해치 아이콘" />
         <div>
-          <strong>서울잇다</strong>
-          <span>서울 정보 허브</span>
+          <strong>Seoul ITDA</strong>
+          <span>서울을 잇는 여행</span>
         </div>
       </button>
       <span class="health-chip" :class="`health-chip--${healthStatus}`">
