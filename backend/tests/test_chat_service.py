@@ -10,11 +10,14 @@ from app.database import Base
 from app.models.attraction import Attraction
 from app.schemas.chat import ChatResponse
 from app.services.chat_service import (
+    MAX_CHAT_ANSWER_LENGTH,
+    ChatResult,
     ChatSource,
     _extract_web_response,
     _is_place_search,
     _openai_chat_answer,
     answer_chat,
+    summarize_chat_answer,
 )
 from app.services.data_service import repair_mojibake
 
@@ -179,6 +182,22 @@ class ChatServiceTestCase(unittest.TestCase):
         payload = post_json.call_args.args[1]
         self.assertNotIn('temperature', payload)
         self.assertEqual(answer, '안녕하세요!')
+
+    def test_long_api_answer_is_summarized_before_response(self):
+        long_answer = ('첫 번째 핵심 문장입니다. ' * 80).strip()
+
+        result = ChatResult(
+            answer=long_answer,
+            sources=[],
+            provider='openai',
+            mode='conversation',
+            used_openai=True,
+            fallback=False,
+        )
+
+        self.assertLessEqual(len(result.answer), MAX_CHAT_ANSWER_LENGTH)
+        self.assertTrue(result.answer.endswith('…'))
+        self.assertEqual(result.answer, summarize_chat_answer(long_answer))
 
 
 class DataEncodingTestCase(unittest.TestCase):

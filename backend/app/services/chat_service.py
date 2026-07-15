@@ -15,6 +15,31 @@ from app.models.attraction import Attraction
 from app.models.post import Post
 
 
+MAX_CHAT_ANSWER_LENGTH = 800
+
+
+def summarize_chat_answer(answer: str, max_length: int = MAX_CHAT_ANSWER_LENGTH) -> str:
+    text = re.sub(r'[ \t]+', ' ', str(answer or '')).strip()
+    text = re.sub(r'\n{3,}', '\n\n', text)
+    if len(text) <= max_length:
+        return text
+
+    window = text[: max_length - 1]
+    minimum_cutoff = int(max_length * 0.55)
+    sentence_cutoffs = [
+        match.end()
+        for match in re.finditer(r'(?:[.!?。！？](?=\s|$)|\n)', window)
+        if match.end() >= minimum_cutoff
+    ]
+    if sentence_cutoffs:
+        cutoff = sentence_cutoffs[-1]
+    else:
+        whitespace_cutoff = window.rfind(' ')
+        cutoff = whitespace_cutoff if whitespace_cutoff >= minimum_cutoff else len(window)
+
+    return window[:cutoff].rstrip() + '…'
+
+
 @dataclass(frozen=True)
 class ChatSource:
     type: str
@@ -30,6 +55,9 @@ class ChatResult:
     mode: str
     used_openai: bool
     fallback: bool
+
+    def __post_init__(self) -> None:
+        self.answer = summarize_chat_answer(self.answer)
 
 
 PARTICLE_SUFFIXES = (
@@ -334,13 +362,15 @@ def _openai_chat_answer(
     if context_lines:
         system_prompt = (
             '너는 서울잇다의 다정한 AI 안내자다. 제공된 내부 서울 데이터만 근거로 장소를 안내하고, '
-            '데이터에 없는 세부 사실은 만들지 마라. 답변은 자연스러운 한국어로 간결하게 작성하라.\n\n'
+            '데이터에 없는 세부 사실은 만들지 마라. 핵심 장소를 최대 3개만 골라 '
+            '700자 이내의 자연스러운 한국어로 요약하라.\n\n'
             '내부 데이터:\n' + '\n'.join(context_lines)
         )
     else:
         system_prompt = (
             '너는 서울잇다의 다정한 대화형 AI다. 사용자의 말에 자연스러운 한국어로 답하고 '
-            '이전 대화의 맥락을 이어가라. 일반 대화에서는 억지로 서울 장소를 추천하지 마라.'
+            '이전 대화의 맥락을 이어가라. 일반 대화에서는 억지로 서울 장소를 추천하지 말고, '
+            '핵심을 최대 5문장과 700자 이내로 정리하라.'
         )
 
     payload = {
@@ -377,12 +407,13 @@ def _local_ai_answer(
     if context_lines:
         system_prompt = (
             '너는 서울잇다의 다정한 AI 안내자다. 아래 내부 데이터만 근거로 장소를 안내하고 '
-            '없는 사실은 추측하지 마라.\n\n내부 데이터:\n' + '\n'.join(context_lines)
+            '없는 사실은 추측하지 마라. 핵심 장소를 최대 3개, 700자 이내로 요약하라.\n\n'
+            '내부 데이터:\n' + '\n'.join(context_lines)
         )
     else:
         system_prompt = (
             '너는 서울잇다의 다정한 대화형 AI다. 자연스러운 한국어로 대화하고 '
-            '일반 대화에서는 억지로 서울 장소를 추천하지 마라.'
+            '일반 대화에서는 억지로 서울 장소를 추천하지 마라. 핵심을 최대 5문장과 700자 이내로 정리하라.'
         )
 
     payload = {
@@ -459,7 +490,8 @@ def _openai_web_search(
         'instructions': (
             '너는 서울잇다의 장소 탐색 도우미다. 서울잇다 내부 DB에 결과가 없어 웹 검색이 요청되었다. '
             '서울 안의 실제 장소를 찾아 자연스러운 한국어로 답하고, 최신 정보는 공식 기관이나 장소 공식 페이지를 '
-            '우선 확인하라. 확인되지 않은 운영시간이나 가격을 단정하지 마라.'
+            '우선 확인하라. 확인되지 않은 운영시간이나 가격을 단정하지 마라. 검색 내용을 그대로 나열하지 말고 '
+            '질문에 필요한 핵심 장소를 최대 5개 항목과 700자 이내로 요약하라.'
         ),
         'input': [*history, {'role': 'user', 'content': question}],
         'tools': [{'type': 'web_search', 'search_context_size': 'low'}],
