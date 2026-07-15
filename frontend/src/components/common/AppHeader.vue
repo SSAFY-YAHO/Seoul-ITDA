@@ -41,8 +41,8 @@ onMounted(() => {
     <div class="container app-header__inner">
       <button class="brand" type="button" @click="router.push('/')">
         <img class="brand__icon" :src="brandMark" alt="서울잇다 해치 아이콘" />
-        <div>
-          <strong>Seoul ITDA</strong>
+        <div class="brand__wordmark">
+          <strong>SEOUL ITDA</strong>
           <span>서울을 잇는 여행</span>
         </div>
       </button>

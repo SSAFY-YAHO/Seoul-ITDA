@@ -14,8 +14,8 @@ function updateFilter(key, value) {
   <section class="festival-filter section-card">
     <div class="festival-filter__header">
       <div>
-        <p class="section-label">필터</p>
-        <h3>축제 검색과 상태 보기</h3>
+        <p class="section-label">FIND YOUR FESTIVAL</p>
+        <h3>원하는 축제를 찾아보세요</h3>
       </div>
       <button
         class="btn btn--ghost btn--small"
@@ -73,7 +73,7 @@ function updateFilter(key, value) {
     </div>
 
     <div class="festival-filter__footer">
-      <p class="helper-text">필터 값을 입력한 뒤 검색 적용 버튼을 눌러주세요.</p>
+      <p class="helper-text">이름과 기간, 진행 상태를 조합해 일정을 찾아보세요.</p>
       <div class="inline-actions">
         <button
           class="btn btn--primary btn--small"

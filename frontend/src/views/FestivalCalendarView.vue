@@ -1,6 +1,5 @@
 <script setup>
 import { computed, onMounted, ref } from "vue";
-import { useRouter } from "vue-router";
 import FestivalCalendar from "../components/festival/FestivalCalendar.vue";
 import FestivalDetailModal from "../components/festival/FestivalDetailModal.vue";
 import FestivalFilter from "../components/festival/FestivalFilter.vue";
@@ -10,8 +9,6 @@ import {
   toCalendarEvent,
 } from "../utils/festivalDate.js";
 import brandMark from "../assets/mascot.png";
-
-const router = useRouter();
 
 const loading = ref(true);
 const error = ref("");
@@ -177,30 +174,28 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="page-shell">
+  <div class="page-shell festival-page">
     <section class="section-card hero-section festival-hero">
       <div class="hero-copy">
-        <span class="badge badge--yellow">서울 축제 캘린더</span>
-        <h1>이번 달의 서울 축제를 한눈에 확인하세요</h1>
+        <span class="home-eyebrow">SEOUL FESTIVAL CALENDAR</span>
+        <h1>계절마다 피어나는<br /><em>서울의 축제</em></h1>
         <p>
-          날짜, 지역, 카테고리로 축제를 정리해 두어 처음 보는 사람도 바로
-          필요한 일정부터 볼 수 있습니다.
+          오늘의 서울에는 어떤 즐거움이 기다리고 있을까요? 날짜를 넘기며
+          공연과 전시, 다채로운 축제의 순간을 발견해 보세요.
         </p>
-        <div class="hero-actions">
-          <button class="btn btn--primary" type="button" @click="goToToday">
-            오늘로 이동
-          </button>
-          <button
-            class="btn btn--secondary"
-            type="button"
-            @click="router.push('/')"
-          >
-            홈으로 돌아가기
-          </button>
-        </div>
       </div>
-      <div class="hero-visual">
-        <img :src="brandMark" alt="서울잇다 해치 아이콘" />
+      <div class="hero-visual festival-hero-art" aria-label="서울 축제 달력 일러스트">
+        <div class="festival-hero-art__sun"></div>
+        <div class="festival-hero-art__calendar">
+          <span>{{ currentMonth.getFullYear() }}</span>
+          <strong>{{ currentMonth.getMonth() + 1 }}</strong>
+          <small>SEOUL FESTIVAL</small>
+        </div>
+        <div class="festival-hero-art__mascot">
+          <img :src="brandMark" alt="서울잇다 해치 아이콘" />
+        </div>
+        <i class="festival-hero-art__flower festival-hero-art__flower--one">✦</i>
+        <i class="festival-hero-art__flower festival-hero-art__flower--two">✿</i>
       </div>
     </section>
 
@@ -211,7 +206,7 @@ onMounted(() => {
       @reset="resetFilters"
     />
 
-    <section class="section-card section-block">
+    <section class="section-card section-block festival-calendar-section">
       <div class="section-heading">
         <div>
           <p class="section-label">캘린더</p>
