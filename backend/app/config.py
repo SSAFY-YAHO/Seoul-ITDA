@@ -43,10 +43,10 @@ class Settings:
     local_ai_model: str = os.getenv('LOCAL_AI_MODEL', 'llama3.1:8b')
     local_ai_timeout_sec: int = int(os.getenv('LOCAL_AI_TIMEOUT_SEC', '30'))
     openai_api_key: str = os.getenv('OPENAI_API_KEY', '')
-    openai_model: str = os.getenv('OPENAI_MODEL', 'gpt-4o-mini')
-    openai_web_search_model: str = os.getenv('OPENAI_WEB_SEARCH_MODEL', 'gpt-5.4-mini')
+    openai_model: str = os.getenv('OPENAI_MODEL', 'gpt-5-mini')
+    openai_web_search_model: str = os.getenv('OPENAI_WEB_SEARCH_MODEL', 'gpt-5-mini')
     openai_timeout_sec: int = int(os.getenv('OPENAI_TIMEOUT_SEC', '15'))
-    openai_web_search_timeout_sec: int = int(os.getenv('OPENAI_WEB_SEARCH_TIMEOUT_SEC', '30'))
+    openai_web_search_timeout_sec: int = int(os.getenv('OPENAI_WEB_SEARCH_TIMEOUT_SEC', '60'))
     chat_web_search_enabled: bool = os.getenv('CHAT_WEB_SEARCH_ENABLED', 'true').strip().lower() in {
         '1', 'true', 'yes', 'on'
     }

@@ -350,7 +350,6 @@ def _openai_chat_answer(
             *history,
             {'role': 'user', 'content': question},
         ],
-        'temperature': 0.5 if not context_lines else 0.2,
     }
     data = _post_json(
         'https://api.openai.com/v1/chat/completions',
@@ -463,7 +462,7 @@ def _openai_web_search(
             '우선 확인하라. 확인되지 않은 운영시간이나 가격을 단정하지 마라.'
         ),
         'input': [*history, {'role': 'user', 'content': question}],
-        'tools': [{'type': 'web_search'}],
+        'tools': [{'type': 'web_search', 'search_context_size': 'low'}],
         'tool_choice': 'auto',
     }
     data = _post_json(

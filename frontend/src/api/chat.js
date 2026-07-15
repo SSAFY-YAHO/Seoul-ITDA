@@ -4,6 +4,6 @@ export async function sendChatMessage(payload) {
   return request('/api/chat', {
     method: 'POST',
     body: payload,
-    timeout: 35000,
+    timeout: 70000,
   })
 }

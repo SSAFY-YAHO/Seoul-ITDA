@@ -13,6 +13,7 @@ from app.services.chat_service import (
     ChatSource,
     _extract_web_response,
     _is_place_search,
+    _openai_chat_answer,
     answer_chat,
 )
 from app.services.data_service import repair_mojibake
@@ -160,6 +161,24 @@ class ChatServiceTestCase(unittest.TestCase):
         self.assertEqual(answer, '검색 결과입니다.')
         self.assertEqual(len(sources), 1)
         self.assertEqual(sources[0].title, '서울시 공식 페이지')
+
+    def test_openai_chat_omits_unsupported_temperature(self):
+        with patch(
+            'app.services.chat_service._post_json',
+            return_value={'choices': [{'message': {'content': '안녕하세요!'}}]},
+        ) as post_json:
+            answer = _openai_chat_answer(
+                question='안녕',
+                history=[],
+                context_lines=[],
+                api_key='test-key',
+                model='gpt-5-mini',
+                timeout_sec=1,
+            )
+
+        payload = post_json.call_args.args[1]
+        self.assertNotIn('temperature', payload)
+        self.assertEqual(answer, '안녕하세요!')
 
 
 class DataEncodingTestCase(unittest.TestCase):
