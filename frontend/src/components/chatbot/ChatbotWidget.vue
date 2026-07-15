@@ -5,6 +5,7 @@ import { sendChatMessage } from "../../api/chat";
 
 const STORAGE_KEY = "seoul-itda-chat-messages";
 const MAX_STORED_MESSAGES = 30;
+const MAX_HISTORY_MESSAGE_LENGTH = 1000;
 const INITIAL_MESSAGE = {
   role: "assistant",
   content: "안녕하세요! 편하게 대화해도 좋아요. 서울 장소를 찾을 때는 내부 데이터를 먼저 살펴보고, 없으면 웹에서 찾아드릴게요.",
@@ -83,7 +84,10 @@ async function sendMessage(question = input.value) {
   const history = messages.value
     .filter((message) => ["user", "assistant"].includes(message?.role) && message?.content)
     .slice(-10)
-    .map((message) => ({ role: message.role, content: message.content }));
+    .map((message) => ({
+      role: message.role,
+      content: String(message.content).slice(0, MAX_HISTORY_MESSAGE_LENGTH),
+    }));
 
   messages.value.push({ role: "user", content: trimmed, sources: [] });
   input.value = "";
