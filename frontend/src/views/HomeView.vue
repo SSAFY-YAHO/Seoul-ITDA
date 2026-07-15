@@ -26,6 +26,13 @@ const activeLocationCategory = ref("전체");
 const locationCategoryCache = new Map();
 let locationDragStartX = 0;
 let locationDragStartScrollLeft = 0;
+let locationDragLatestX = 0;
+let locationDragFrame = 0;
+let locationScrollStateFrame = 0;
+let locationDragClickResetTimer = 0;
+let didMoveLocationDrag = false;
+
+const LOCATION_DRAG_THRESHOLD = 5;
 
 const recommendedLocations = computed(() => locations.value);
 const locationCategories = [
@@ -149,12 +156,25 @@ function getFestivalPlace(festival) {
 }
 
 function updateLocationScrollState() {
-  const track = locationTrackRef.value;
-  if (!track) return;
+  if (isDraggingLocations.value || locationScrollStateFrame) return;
 
-  const maxScrollLeft = Math.max(0, track.scrollWidth - track.clientWidth);
-  canScrollLocationPrev.value = track.scrollLeft > 2;
-  canScrollLocationNext.value = track.scrollLeft < maxScrollLeft - 2;
+  locationScrollStateFrame = window.requestAnimationFrame(() => {
+    locationScrollStateFrame = 0;
+
+    const track = locationTrackRef.value;
+    if (!track) return;
+
+    const maxScrollLeft = Math.max(0, track.scrollWidth - track.clientWidth);
+    const canScrollPrev = track.scrollLeft > 2;
+    const canScrollNext = track.scrollLeft < maxScrollLeft - 2;
+
+    if (canScrollLocationPrev.value !== canScrollPrev) {
+      canScrollLocationPrev.value = canScrollPrev;
+    }
+    if (canScrollLocationNext.value !== canScrollNext) {
+      canScrollLocationNext.value = canScrollNext;
+    }
+  });
 }
 
 function scrollLocationTrack(direction) {
@@ -175,7 +195,10 @@ function startLocationDrag(event) {
 
   isDraggingLocations.value = true;
   locationDragStartX = event.clientX;
+  locationDragLatestX = event.clientX;
   locationDragStartScrollLeft = track.scrollLeft;
+  didMoveLocationDrag = false;
+  window.clearTimeout(locationDragClickResetTimer);
   track.setPointerCapture(event.pointerId);
 }
 
@@ -185,7 +208,17 @@ function moveLocationDrag(event) {
   const track = locationTrackRef.value;
   if (!track) return;
 
-  track.scrollLeft = locationDragStartScrollLeft - (event.clientX - locationDragStartX);
+  locationDragLatestX = event.clientX;
+  if (Math.abs(locationDragLatestX - locationDragStartX) >= LOCATION_DRAG_THRESHOLD) {
+    didMoveLocationDrag = true;
+  }
+
+  if (!locationDragFrame) {
+    locationDragFrame = window.requestAnimationFrame(() => {
+      locationDragFrame = 0;
+      track.scrollLeft = locationDragStartScrollLeft - (locationDragLatestX - locationDragStartX);
+    });
+  }
   event.preventDefault();
 }
 
@@ -193,11 +226,34 @@ function endLocationDrag(event) {
   if (!isDraggingLocations.value) return;
 
   const track = locationTrackRef.value;
+  if (locationDragFrame) {
+    window.cancelAnimationFrame(locationDragFrame);
+    locationDragFrame = 0;
+    if (track) {
+      track.scrollLeft = locationDragStartScrollLeft - (locationDragLatestX - locationDragStartX);
+    }
+  }
+
   isDraggingLocations.value = false;
   if (track?.hasPointerCapture(event.pointerId)) {
     track.releasePointerCapture(event.pointerId);
   }
+  if (didMoveLocationDrag) {
+    locationDragClickResetTimer = window.setTimeout(() => {
+      didMoveLocationDrag = false;
+    }, 0);
+  }
   updateLocationScrollState();
+}
+
+function selectFeaturedLocationFromPointer(event, location) {
+  if (didMoveLocationDrag) {
+    event.preventDefault();
+    event.stopPropagation();
+    return;
+  }
+
+  selectFeaturedLocation(location);
 }
 
 function selectMapLocation(location) {
@@ -335,6 +391,9 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   window.removeEventListener("resize", updateLocationScrollState);
+  window.cancelAnimationFrame(locationDragFrame);
+  window.cancelAnimationFrame(locationScrollStateFrame);
+  window.clearTimeout(locationDragClickResetTimer);
 });
 
 watch(visibleLocations, () => {
@@ -453,7 +512,7 @@ watch(visibleLocations, () => {
           :class="{ 'location-card--selected': selectedFeaturedLocation?.id === location.id }"
           role="button"
           tabindex="0"
-          @click="selectFeaturedLocation(location)"
+          @click="selectFeaturedLocationFromPointer($event, location)"
           @keydown.enter="selectFeaturedLocation(location)"
         >
           <div class="location-card__visual">
