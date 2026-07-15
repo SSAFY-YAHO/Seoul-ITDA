@@ -1,516 +1,245 @@
 <script setup>
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
-import brandMark from "../assets/mascot.png";
+import mascot from "../assets/mascot.png";
 import { fetchLocations } from "../api/locations";
 import { fetchFestivals } from "../api/festivals";
 import { parseFestivalDateRange } from "../utils/festivalDate";
 
 const router = useRouter();
+const query = ref("");
 const locations = ref([]);
+const festivals = ref([]);
 const loading = ref(true);
 const error = ref("");
-const activeGuide = ref("");
-const selectedMapLocation = ref(null);
-const festivalItems = ref([]);
-const festivalLoading = ref(false);
-const festivalError = ref("");
-const locationTrackRef = ref(null);
-const canScrollLocationPrev = ref(false);
-const canScrollLocationNext = ref(false);
-const isDraggingLocations = ref(false);
-let locationDragStartX = 0;
-let locationDragStartScrollLeft = 0;
+const activeTheme = ref("전체");
 
-const guideCards = [
-  {
-    key: "tour",
-    title: "관광지 먼저 보기",
-    description: "도심 속 명소와 산책하기 좋은 동선을 말랑하게 먼저 확인합니다.",
-    buttonLabel: "바로 열기",
-  },
-  {
-    key: "festival",
-    title: "축제 일정 확인",
-    description: "이번 달 서울 축제를 날짜 순서대로 귀엽게 살펴봅니다.",
-    buttonLabel: "바로 열기",
-  },
-];
+const themes = ["전체", "관광지", "문화", "쇼핑", "레포츠", "숙박"];
 
-const recommendedLocations = computed(() => locations.value);
+const categoryNames = {
+  tourist: "관광지",
+  culture: "문화",
+  shopping: "쇼핑",
+  leisure: "레포츠",
+  hotel: "숙박",
+  festival: "축제",
+};
 
-const activeGuideTitle = computed(() => {
-  if (activeGuide.value === "tour") return "관광지 먼저 보기";
-  if (activeGuide.value === "festival") return "가장 가까운 축제 일정";
-  return "빠른 안내";
+const filteredLocations = computed(() => {
+  const keyword = query.value.trim().toLowerCase();
+  return locations.value
+    .filter((item) => {
+      const category = categoryNames[item.category] || item.category || "관광지";
+      const themeMatched = activeTheme.value === "전체" || category === activeTheme.value;
+      const searchText = [item.name, item.title, item.description, item.address, item.tags]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+      return themeMatched && (!keyword || searchText.includes(keyword));
+    })
+    .slice(0, 8);
 });
 
-const selectedLocationQuery = computed(() => {
-  if (!selectedMapLocation.value) return "";
-
-  return [
-    selectedMapLocation.value.name || selectedMapLocation.value.title || "",
-    formatLocationAddress(selectedMapLocation.value),
-  ]
-    .filter(Boolean)
-    .join(" ");
-});
-
-const mapEmbedUrl = computed(() => {
-  if (!selectedLocationQuery.value) return "";
-
-  return `https://maps.google.com/maps?q=${encodeURIComponent(selectedLocationQuery.value)}&z=14&output=embed`;
-});
-
-const naverMapUrl = computed(() => {
-  if (!selectedLocationQuery.value) return "";
-
-  return `https://map.naver.com/p/search/${encodeURIComponent(selectedLocationQuery.value)}`;
-});
-
-const nearestFestivals = computed(() => {
+const upcomingFestivals = computed(() => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-
-  return festivalItems.value
-    .map((festival) => ({
-      festival,
-      dateRange: parseFestivalDateRange(festival),
-    }))
-    .filter(({ dateRange }) => dateRange && dateRange.end >= today)
-    .sort((a, b) => {
-      const aGap = a.dateRange.start > today ? a.dateRange.start - today : 0;
-      const bGap = b.dateRange.start > today ? b.dateRange.start - today : 0;
-      if (aGap !== bGap) return aGap - bGap;
-      return a.dateRange.start - b.dateRange.start;
-    })
-    .slice(0, 5);
+  return festivals.value
+    .map((festival) => ({ festival, range: parseFestivalDateRange(festival) }))
+    .filter(({ range }) => !range || range.end >= today)
+    .sort((a, b) => (a.range?.start || today) - (b.range?.start || today))
+    .slice(0, 3);
 });
 
-function getCategoryLabel(category) {
-  if (!category) return "정보";
-  const map = {
-    tourist: "관광지",
-    festival: "축제",
-    restaurant: "맛집",
-    culture: "문화",
-    hotel: "숙박",
-  };
-  return map[category] || category;
+function categoryLabel(item) {
+  return categoryNames[item.category] || item.category || "서울 명소";
 }
 
-function getCategoryTone(category) {
-  const map = {
-    tourist: "badge--blue",
-    festival: "badge--sky",
-    restaurant: "badge--ice",
-    culture: "badge--slate",
-    hotel: "badge--ice",
-  };
-  return map[category] || "badge--blue";
+function festivalTitle(item) {
+  return item.title || item.name || item.festivalName || "서울 축제";
 }
 
-function formatLocationAddress(location) {
-  return location.address || location.road_address || "주소 정보가 아직 준비되지 않았습니다.";
+function festivalDate(item) {
+  const range = parseFestivalDateRange(item);
+  if (!range) return "일정 준비 중";
+  const options = { month: "short", day: "numeric" };
+  return `${range.start.toLocaleDateString("ko-KR", options)} - ${range.end.toLocaleDateString("ko-KR", options)}`;
 }
 
-function formatLocationDescription(location) {
-  return location.description || location.summary || "설명은 준비 중입니다.";
+function submitSearch() {
+  document.querySelector("#places")?.scrollIntoView({ behavior: "smooth" });
 }
 
-function formatLocationTags(location) {
-  if (!location.tags) return "";
-  return location.tags
-    .split(",")
-    .map((tag) => tag.trim())
-    .filter(Boolean)
-    .slice(0, 3)
-    .join(" · ");
-}
-
-function formatFestivalPeriod(festival) {
-  const parsed = parseFestivalDateRange(festival);
-  if (!parsed) return "기간 정보 미정";
-  const start = parsed.start.toLocaleDateString("ko-KR", {
-    month: "long",
-    day: "numeric",
-  });
-  const end = parsed.end.toLocaleDateString("ko-KR", {
-    month: "long",
-    day: "numeric",
-  });
-  return `${start} ~ ${end}`;
-}
-
-function getFestivalTitle(festival) {
-  return festival.title || festival.name || festival.festivalName || "축제";
-}
-
-function getFestivalPlace(festival) {
-  return festival.place || festival.venue || festival.location || "장소 정보 미정";
-}
-
-function updateLocationScrollState() {
-  const track = locationTrackRef.value;
-  if (!track) return;
-
-  const maxScrollLeft = Math.max(0, track.scrollWidth - track.clientWidth);
-  canScrollLocationPrev.value = track.scrollLeft > 2;
-  canScrollLocationNext.value = track.scrollLeft < maxScrollLeft - 2;
-}
-
-function scrollLocationTrack(direction) {
-  const track = locationTrackRef.value;
-  if (!track) return;
-
-  const firstCard = track.firstElementChild;
-  const gap = Number.parseFloat(getComputedStyle(track).columnGap) || 0;
-  const distance = firstCard ? firstCard.getBoundingClientRect().width + gap : track.clientWidth;
-  track.scrollBy({ left: direction * distance, behavior: "smooth" });
-}
-
-function startLocationDrag(event) {
-  if (event.pointerType === "mouse" && event.button !== 0) return;
-
-  const track = locationTrackRef.value;
-  if (!track) return;
-
-  isDraggingLocations.value = true;
-  locationDragStartX = event.clientX;
-  locationDragStartScrollLeft = track.scrollLeft;
-  track.setPointerCapture(event.pointerId);
-}
-
-function moveLocationDrag(event) {
-  if (!isDraggingLocations.value) return;
-
-  const track = locationTrackRef.value;
-  if (!track) return;
-
-  track.scrollLeft = locationDragStartScrollLeft - (event.clientX - locationDragStartX);
-  event.preventDefault();
-}
-
-function endLocationDrag(event) {
-  if (!isDraggingLocations.value) return;
-
-  const track = locationTrackRef.value;
-  isDraggingLocations.value = false;
-  if (track?.hasPointerCapture(event.pointerId)) {
-    track.releasePointerCapture(event.pointerId);
-  }
-  updateLocationScrollState();
-}
-
-function selectMapLocation(location) {
-  selectedMapLocation.value = location;
-}
-
-async function loadFestivalsForGuide() {
-  festivalLoading.value = true;
-  festivalError.value = "";
-
-  try {
-    const data = await fetchFestivals();
-    festivalItems.value = Array.isArray(data) ? data : data?.items || [];
-  } catch (err) {
-    festivalError.value = err.message || "축제 정보를 불러오지 못했습니다.";
-    festivalItems.value = [];
-  } finally {
-    festivalLoading.value = false;
-  }
-}
-
-async function openGuide(type) {
-  activeGuide.value = type;
-
-  if (type === "tour" && !selectedMapLocation.value && recommendedLocations.value.length > 0) {
-    selectedMapLocation.value = recommendedLocations.value[0];
-  }
-
-  if (type === "festival" && festivalItems.value.length === 0) {
-    await loadFestivalsForGuide();
-  }
-}
-
-function closeGuide() {
-  activeGuide.value = "";
-}
-
-async function loadLocations() {
+async function loadHomeData() {
   loading.value = true;
   error.value = "";
-
   try {
-    const data = await fetchLocations();
-    locations.value = Array.isArray(data) ? data : data?.items || [];
-    await nextTick();
-    updateLocationScrollState();
+    const [locationData, festivalData] = await Promise.all([
+      fetchLocations(),
+      fetchFestivals().catch(() => []),
+    ]);
+    locations.value = Array.isArray(locationData) ? locationData : locationData?.items || [];
+    festivals.value = Array.isArray(festivalData) ? festivalData : festivalData?.items || [];
   } catch (err) {
     error.value = err.message || "서울 정보를 불러오지 못했습니다.";
-    locations.value = [];
   } finally {
     loading.value = false;
   }
 }
 
-onMounted(() => {
-  loadLocations();
-  window.addEventListener("resize", updateLocationScrollState);
-});
-
-onBeforeUnmount(() => {
-  window.removeEventListener("resize", updateLocationScrollState);
-});
-
-watch(recommendedLocations, () => {
-  if (!selectedMapLocation.value && recommendedLocations.value.length > 0) {
-    selectedMapLocation.value = recommendedLocations.value[0];
-  }
-});
+onMounted(loadHomeData);
 </script>
 
 <template>
-  <div class="page-shell home-page">
-    <section class="hero-section section-card home-hero">
-      <div class="hero-copy">
-        <span class="badge badge--blue">서울잇다 · 도시 정보 허브</span>
-        <h1>서울을 처음 보는 사람도 금방 길을 찾게</h1>
-        <p>
-          서울잇다는 서울 관광 정보와 축제 일정, 그리고 사용자 후기를 함께
-          모아 빠르게 확인할 수 있는 통합 안내 사이트입니다.
+  <div class="forest-home">
+    <section class="forest-hero">
+      <div class="forest-hero__sun" aria-hidden="true"></div>
+      <div class="forest-hero__copy">
+        <p class="forest-eyebrow">SEOUL LOCAL DISCOVERY</p>
+        <h1>서울의 오늘을<br><em>가볍게 잇다</em></h1>
+        <p class="forest-lead">
+          공공데이터로 찾은 서울 명소부터 축제 일정, 여행자의 생생한 이야기까지
+          한곳에서 둘러보세요.
         </p>
-        <div class="hero-actions">
-          <button
-            class="btn btn--primary"
-            type="button"
-            @click="router.push('/festivals')"
-          >
-            축제부터 보기
-          </button>
-          <button
-            class="btn btn--secondary"
-            type="button"
-            @click="router.push('/posts')"
-          >
-            커뮤니티 보기
-          </button>
+        <form class="forest-search" @submit.prevent="submitSearch">
+          <span aria-hidden="true">⌕</span>
+          <input v-model="query" type="search" placeholder="어디로 떠나볼까요? 장소나 테마를 검색해보세요" />
+          <button type="submit">찾아보기</button>
+        </form>
+        <div class="forest-quick-links">
+          <button type="button" @click="router.push('/festivals')">이번 달 축제</button>
+          <button type="button" @click="router.push('/posts')">여행 이야기</button>
+          <button type="button" @click="activeTheme = '문화'; submitSearch()">문화 산책</button>
         </div>
       </div>
-
-      <div class="hero-visual hero-visual--stack">
-        <div class="hero-panel home-hero-panel">
-          <div class="hero-panel__bar">
-            <span class="badge badge--sky">오늘의 안내</span>
-            <span class="meta-pill">서울을 가볍게 고르는 방법</span>
-          </div>
-          <div class="hero-panel__stack">
-            <article class="hero-panel__card">
-              <strong>1. 원하는 지역부터 고르기</strong>
-              <p>동네 이름이나 관심 카테고리를 먼저 확인하세요.</p>
-            </article>
-            <article class="hero-panel__card">
-              <strong>2. 축제와 장소를 함께 보기</strong>
-              <p>일정과 위치를 나란히 보면 이동 계획이 쉬워집니다.</p>
-            </article>
-            <article class="hero-panel__card hero-panel__card--wide">
-              <strong>3. 궁금한 점은 챗봇에 바로 물어보기</strong>
-              <p>검색보다 빠르게, 지금 필요한 정보만 가볍게 확인합니다.</p>
-            </article>
-          </div>
-          <div class="hero-panel__bar">
-            <img :src="brandMark" alt="서울잇다 아이콘" />
-            <div>
-              <strong>서울잇다</strong>
-              <p class="helper-text">서울에서 무엇을 할지 빠르게 정리해 주는 여행 안내 화면입니다.</p>
-            </div>
-          </div>
-        </div>
+      <div class="forest-hero__scene" aria-hidden="true">
+        <span class="cloud cloud--one"></span>
+        <span class="cloud cloud--two"></span>
+        <div class="seoul-tower"><i></i></div>
+        <div class="hill hill--back"></div>
+        <div class="hill hill--front"></div>
+        <span v-for="n in 9" :key="n" :class="`tree tree--${n}`"></span>
+        <img :src="mascot" alt="" />
       </div>
+      <div class="forest-wave" aria-hidden="true"></div>
     </section>
 
-    <section class="section-card section-block">
-      <div class="section-heading">
-        <div>
-          <p class="section-label">사용 순서</p>
-          <h2>처음 방문한 사람을 위한 빠른 안내</h2>
+    <main class="forest-content">
+      <section class="news-strip">
+        <div class="news-strip__title">
+          <span>새소식</span>
+          <strong>서울의 이번 주</strong>
         </div>
-      </div>
-      <div class="category-grid">
-        <article v-for="card in guideCards" :key="card.title" class="category-card">
-          <span class="badge badge--ice">가이드</span>
-          <h3>{{ card.title }}</h3>
-          <p>{{ card.description }}</p>
-          <button class="btn btn--ghost btn--small" type="button" @click="openGuide(card.key)">
-            {{ card.buttonLabel }}
-          </button>
+        <article v-for="item in upcomingFestivals" :key="item.festival.id || festivalTitle(item.festival)">
+          <small>{{ festivalDate(item.festival) }}</small>
+          <strong>{{ festivalTitle(item.festival) }}</strong>
         </article>
-      </div>
-    </section>
+        <button type="button" aria-label="축제 전체 보기" @click="router.push('/festivals')">＋</button>
+      </section>
 
-    <section class="section-card section-block">
-      <div class="section-heading">
-        <div>
-          <p class="section-label">추천 장소</p>
-          <h2>지금 둘러볼 만한 서울 정보</h2>
-          <p class="page-subtitle">실제 데이터가 있으면 바로 카드로, 없으면 안내 문구로 보여줍니다.</p>
-        </div>
-        <div class="inline-actions">
-          <button class="btn btn--ghost" type="button" @click="loadLocations">
-            새로고침
-          </button>
+      <section id="places" class="discovery-section">
+        <header class="forest-heading">
+          <p>삶 속으로 들어온 서울</p>
+          <h2>취향대로 발견하는<br><em>우리 동네 이야기</em></h2>
+        </header>
+        <div class="theme-tabs" role="tablist" aria-label="장소 테마">
           <button
-            class="btn btn--secondary btn--small"
+            v-for="theme in themes"
+            :key="theme"
             type="button"
-            :disabled="!canScrollLocationPrev"
-            @click="scrollLocationTrack(-1)"
+            :class="{ active: activeTheme === theme }"
+            @click="activeTheme = theme"
           >
-            이전
-          </button>
-          <button
-            class="btn btn--secondary btn--small"
-            type="button"
-            :disabled="!canScrollLocationNext"
-            @click="scrollLocationTrack(1)"
-          >
-            다음
-          </button>
-        </div>
-      </div>
-
-      <div v-if="loading" class="loading-state">
-        <strong>장소 정보를 불러오는 중입니다.</strong>
-        <p>조금만 기다리면 서울의 장소 목록이 표시됩니다.</p>
-      </div>
-      <div v-else-if="error" class="error-state">
-        <strong>장소 정보를 불러오지 못했습니다.</strong>
-        <p>{{ error }}</p>
-        <button class="btn btn--secondary" type="button" @click="loadLocations">
-          다시 시도
-        </button>
-      </div>
-      <div v-else-if="recommendedLocations.length === 0" class="empty-state">
-        <strong>표시할 장소가 아직 없습니다.</strong>
-        <p>지금은 추천 장소를 준비 중입니다. 잠시 후 다시 확인해 주세요.</p>
-      </div>
-      <div
-        v-else
-        ref="locationTrackRef"
-        class="home-location-track"
-        :class="{ 'home-location-track--dragging': isDraggingLocations }"
-        @scroll="updateLocationScrollState"
-        @pointerdown="startLocationDrag"
-        @pointermove="moveLocationDrag"
-        @pointerup="endLocationDrag"
-        @pointercancel="endLocationDrag"
-      >
-        <article
-          v-for="location in recommendedLocations"
-          :key="location.id || location.name"
-          class="location-card"
-        >
-          <div class="location-card__header">
-            <span :class="['badge', getCategoryTone(location.category)]">
-              {{ getCategoryLabel(location.category) }}
-            </span>
-            <h3>{{ location.name || location.title || '이름 미정' }}</h3>
-          </div>
-          <p>{{ formatLocationDescription(location) }}</p>
-          <p class="helper-text">{{ formatLocationAddress(location) }}</p>
-          <p v-if="formatLocationTags(location)" class="meta-pill">
-            {{ formatLocationTags(location) }}
-          </p>
-        </article>
-      </div>
-    </section>
-
-    <div v-if="activeGuide" class="modal-backdrop" @click.self="closeGuide">
-      <section class="section-card modal-card home-guide-modal">
-        <div class="modal-card__header">
-          <div>
-            <p class="section-label">빠른 안내</p>
-            <h2>{{ activeGuideTitle }}</h2>
-          </div>
-          <button class="btn btn--ghost btn--small" type="button" @click="closeGuide">
-            닫기
+            {{ theme }}
           </button>
         </div>
 
-        <div class="modal-card__body">
-          <div v-if="activeGuide === 'tour'">
-            <div v-if="loading" class="loading-state">
-              <strong>관광지 목록을 준비하는 중입니다.</strong>
-              <p>잠시만 기다려 주세요.</p>
+        <div v-if="loading" class="forest-state">서울 곳곳의 이야기를 모으고 있어요…</div>
+        <div v-else-if="error" class="forest-state forest-state--error">
+          <strong>정보를 불러오지 못했습니다.</strong>
+          <span>{{ error }}</span>
+          <button type="button" @click="loadHomeData">다시 시도</button>
+        </div>
+        <div v-else-if="filteredLocations.length === 0" class="forest-state">
+          검색 결과가 없습니다. 다른 검색어나 테마를 선택해보세요.
+        </div>
+        <div v-else class="place-gallery">
+          <article v-for="(location, index) in filteredLocations" :key="location.id || location.name" class="place-tile">
+            <div :class="`place-tile__art place-tile__art--${(index % 4) + 1}`">
+              <span>{{ categoryLabel(location) }}</span>
+              <i aria-hidden="true"></i>
             </div>
-            <div v-else-if="recommendedLocations.length === 0" class="empty-state">
-              <strong>표시할 관광지 데이터가 없습니다.</strong>
-              <p>잠시 후 다시 시도해 주세요.</p>
+            <div class="place-tile__body">
+              <small>{{ location.district || "서울" }}</small>
+              <h3>{{ location.name || location.title || "이름 없는 장소" }}</h3>
+              <p>{{ location.description || "서울에서 만나는 특별한 장소입니다." }}</p>
+              <span>{{ location.address || "주소 정보 준비 중" }}</span>
             </div>
-            <div v-else class="guide-map-layout">
-              <div class="guide-map-wrap">
-                <iframe
-                  v-if="mapEmbedUrl"
-                  class="guide-map-frame"
-                  :src="mapEmbedUrl"
-                  title="관광지 지도"
-                  loading="lazy"
-                  referrerpolicy="no-referrer-when-downgrade"
-                />
-                <a
-                  v-if="naverMapUrl"
-                  class="btn btn--primary guide-map-link"
-                  :href="naverMapUrl"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  네이버 지도에서 열기
-                </a>
-              </div>
-              <div class="guide-location-list">
-                <button
-                  v-for="location in recommendedLocations.slice(0, 8)"
-                  :key="location.id || location.name"
-                  class="guide-location-item"
-                  :class="{ 'guide-location-item--active': selectedMapLocation?.id === location.id }"
-                  type="button"
-                  @click="selectMapLocation(location)"
-                >
-                  <strong>{{ location.name || location.title || "이름 미정" }}</strong>
-                  <span>{{ formatLocationAddress(location) }}</span>
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div v-else-if="activeGuide === 'festival'">
-            <div v-if="festivalLoading" class="loading-state">
-              <strong>가장 가까운 축제를 찾는 중입니다.</strong>
-              <p>잠시만 기다려 주세요.</p>
-            </div>
-            <div v-else-if="festivalError" class="error-state">
-              <strong>축제 정보를 불러오지 못했습니다.</strong>
-              <p>{{ festivalError }}</p>
-            </div>
-            <div v-else-if="nearestFestivals.length === 0" class="empty-state">
-              <strong>현재 기준으로 표시할 일정이 없습니다.</strong>
-              <p>필터를 넓혀 전체 축제 캘린더에서 확인해 주세요.</p>
-            </div>
-            <div v-else class="guide-festival-list">
-              <article
-                v-for="item in nearestFestivals"
-                :key="item.festival.id || getFestivalTitle(item.festival)"
-                class="detail-card detail-card--compact"
-              >
-                <span class="badge badge--yellow">가까운 일정</span>
-                <h3>{{ getFestivalTitle(item.festival) }}</h3>
-                <p>{{ formatFestivalPeriod(item.festival) }}</p>
-                <p class="helper-text">{{ getFestivalPlace(item.festival) }}</p>
-              </article>
-            </div>
-          </div>
+          </article>
         </div>
       </section>
-    </div>
 
+      <section class="community-banner">
+        <div class="community-banner__art" aria-hidden="true">
+          <span class="mini-tree"></span><span class="mini-tree mini-tree--two"></span>
+          <img :src="mascot" alt="" />
+        </div>
+        <div>
+          <p>LOCAL COMMUNITY</p>
+          <h2>여행자의 서울은<br>조금 더 다정하니까</h2>
+          <span>궁금한 것을 묻고, 발견한 장소와 경험을 익명으로 나눠보세요.</span>
+        </div>
+        <button type="button" @click="router.push('/posts')">커뮤니티 둘러보기 →</button>
+      </section>
+    </main>
   </div>
 </template>
+
+<style scoped>
+.forest-home { overflow: hidden; background: #fbfbef; color: #294437; }
+.forest-hero { position: relative; min-height: 650px; padding: 90px max(7vw, 24px) 150px; background: linear-gradient(180deg, #dff3e2 0%, #eef7d9 70%, #fbfbef 100%); }
+.forest-hero__copy { position: relative; z-index: 5; width: min(620px, 52vw); }
+.forest-eyebrow, .forest-heading p, .community-banner p { margin: 0 0 12px; color: #4d9b4b; font-weight: 900; font-size: 13px; letter-spacing: .18em; }
+.forest-hero h1 { margin: 0; font-size: clamp(48px, 6vw, 86px); line-height: .98; letter-spacing: -.065em; }
+.forest-hero h1 em, .forest-heading em { color: #2c9a4b; font-style: normal; }
+.forest-lead { max-width: 570px; margin: 26px 0; color: #557064; font-size: 17px; line-height: 1.75; }
+.forest-search { display: flex; align-items: center; gap: 12px; max-width: 620px; padding: 9px 10px 9px 20px; border: 3px solid #42664d; border-radius: 999px; background: white; box-shadow: 0 15px 0 rgba(65, 101, 76, .1); }
+.forest-search > span { color: #369d4c; font-size: 30px; line-height: 1; }
+.forest-search input { min-width: 0; flex: 1; border: 0; outline: 0; background: transparent; color: #294437; font: inherit; }
+.forest-search button, .community-banner > button { padding: 14px 22px; border: 0; border-radius: 999px; background: #35a74e; color: white; font-weight: 900; }
+.forest-quick-links { display: flex; gap: 10px; margin-top: 22px; flex-wrap: wrap; }
+.forest-quick-links button, .theme-tabs button { padding: 9px 17px; border: 1px solid rgba(45, 104, 60, .18); border-radius: 999px; background: rgba(255,255,255,.7); color: #496455; font-weight: 800; }
+.forest-hero__sun { position: absolute; top: 58px; right: 8%; width: 125px; height: 125px; border-radius: 50%; background: #ffe36e; opacity: .8; }
+.forest-hero__scene { position: absolute; right: 0; bottom: 60px; width: 53%; height: 88%; }
+.hill { position: absolute; bottom: 0; border-radius: 55% 45% 0 0 / 70% 70% 0 0; }
+.hill--back { right: -8%; width: 100%; height: 58%; background: #9bd47f; transform: rotate(-3deg); }
+.hill--front { right: -22%; width: 105%; height: 42%; background: #58b769; transform: rotate(4deg); }
+.cloud { position: absolute; width: 95px; height: 30px; border-radius: 40px; background: rgba(255,255,255,.8); }
+.cloud::before, .cloud::after { content: ""; position: absolute; bottom: 0; border-radius: 50%; background: inherit; }
+.cloud::before { left: 18px; width: 44px; height: 44px; }.cloud::after { right: 12px; width: 32px; height: 32px; }
+.cloud--one { top: 90px; left: 4%; }.cloud--two { top: 170px; right: 10%; transform: scale(.75); }
+.seoul-tower { position: absolute; z-index: 2; right: 30%; bottom: 38%; width: 23px; height: 210px; background: #f7f0d5; border: 7px solid #315844; border-radius: 10px 10px 0 0; }
+.seoul-tower::before { content: ""; position: absolute; left: 50%; top: -90px; width: 6px; height: 90px; background: #315844; transform: translateX(-50%); }
+.seoul-tower i { position: absolute; left: 50%; top: 30px; width: 78px; height: 30px; border: 7px solid #315844; border-radius: 50%; background: #f4a15e; transform: translateX(-50%); }
+.tree { position: absolute; z-index: 3; bottom: 12%; width: 34px; height: 90px; border-radius: 50% 50% 20% 20%; background: #267e50; border: 5px solid #315844; transform-origin: bottom; }
+.tree::after { content: ""; position: absolute; left: 50%; bottom: -20px; width: 7px; height: 25px; background: #765c3b; transform: translateX(-50%); }
+.tree--1 { left: 5%; transform: scale(.8) rotate(-6deg); }.tree--2 { left: 14%; bottom: 6%; background:#75bd61; }.tree--3 { left: 28%; transform: scale(1.2); }.tree--4 { right: 6%; bottom: 20%; }.tree--5 { right: 16%; background:#8acb62; transform:scale(.75); }.tree--6 { right: 42%; bottom: 3%; }.tree--7 { left: 43%; bottom: 20%; transform:scale(.65); }.tree--8 { right: 2%; bottom: 2%; background:#75bd61; }.tree--9 { left: 2%; bottom: 30%; transform:scale(.6); }
+.forest-hero__scene img { position: absolute; z-index: 5; right: 10%; bottom: 5%; width: clamp(120px, 15vw, 210px); filter: drop-shadow(0 14px 10px rgba(38,85,54,.2)); }
+.forest-wave { position: absolute; z-index: 4; left: -5%; right: -5%; bottom: -56px; height: 130px; border-radius: 50% 50% 0 0; background: #fbfbef; }
+.forest-content { width: min(1320px, calc(100% - 48px)); margin: 0 auto; padding: 10px 0 80px; }
+.news-strip { position: relative; z-index: 6; display: grid; grid-template-columns: 190px repeat(3, 1fr) 46px; gap: 24px; align-items: center; min-height: 126px; padding: 20px 28px; border: 1px solid #dbe8d2; border-radius: 28px; background: white; box-shadow: 0 16px 45px rgba(47,91,57,.08); }
+.news-strip__title span { display:block; color:#2b9c4b; font-weight:900; }.news-strip__title strong { font-size:20px; }
+.news-strip article { min-width:0; padding-left:22px; border-left:1px solid #e4ebdf; }.news-strip article small { display:block; color:#7f9787; }.news-strip article strong { display:block; margin-top:5px; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+.news-strip > button { width:42px; height:42px; border:1px solid #dce7d7; border-radius:50%; background:#f7fbf4; color:#3b8850; font-size:21px; }
+.discovery-section { padding: 110px 0 70px; }
+.forest-heading { text-align:center; }.forest-heading h2 { margin:0; font-size:clamp(34px,4vw,58px); line-height:1.12; letter-spacing:-.05em; }
+.theme-tabs { display:flex; justify-content:center; gap:8px; margin:30px 0 38px; flex-wrap:wrap; }.theme-tabs button.active { border-color:#359c4c; background:#359c4c; color:white; }
+.place-gallery { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:22px; }
+.place-tile { overflow:hidden; border:1px solid #dfe8da; border-radius:26px; background:white; box-shadow:0 14px 30px rgba(54,91,61,.07); transition:.25s ease; }.place-tile:hover { transform:translateY(-7px); box-shadow:0 20px 40px rgba(54,91,61,.13); }
+.place-tile__art { position:relative; height:150px; overflow:hidden; padding:18px; background:#bce1b3; }.place-tile__art span { position:relative; z-index:3; padding:6px 11px; border-radius:999px; background:rgba(255,255,255,.85); color:#327746; font-size:12px; font-weight:900; }.place-tile__art i { position:absolute; right:-10%; bottom:-45%; width:85%; height:130%; border-radius:50% 50% 0 0; background:#65b96d; transform:rotate(-12deg); }.place-tile__art::after { content:""; position:absolute; left:18%; bottom:0; width:56px; height:92px; border-radius:28px 28px 0 0; background:#fff6d7; border:5px solid #3e6a50; }
+.place-tile__art--2 { background:#c8e9e6; }.place-tile__art--2 i { background:#6ebec1; }.place-tile__art--3 { background:#f4df9e; }.place-tile__art--3 i { background:#efad5c; }.place-tile__art--4 { background:#cbd9ef; }.place-tile__art--4 i { background:#819fc9; }
+.place-tile__body { padding:20px; }.place-tile__body small { color:#399553; font-weight:900; }.place-tile__body h3 { margin:7px 0 9px; font-size:19px; }.place-tile__body p { display:-webkit-box; min-height:44px; margin:0 0 13px; overflow:hidden; color:#64786c; font-size:14px; -webkit-box-orient:vertical; -webkit-line-clamp:2; }.place-tile__body > span { display:block; overflow:hidden; color:#8a998f; font-size:12px; white-space:nowrap; text-overflow:ellipsis; }
+.forest-state { display:grid; place-items:center; gap:10px; min-height:220px; border:1px dashed #bad3b8; border-radius:28px; background:rgba(255,255,255,.65); color:#68806f; }.forest-state--error button { padding:9px 17px; border:0; border-radius:999px; background:#399a4f; color:white; font-weight:800; }
+.community-banner { position:relative; display:grid; grid-template-columns:260px 1fr auto; align-items:center; gap:42px; min-height:280px; padding:40px 55px; overflow:hidden; border-radius:42px; background:linear-gradient(120deg,#cdeedc,#eaf5ce); }.community-banner h2 { margin:0 0 12px; font-size:clamp(30px,3.5vw,48px); line-height:1.08; }.community-banner > div > span { color:#587266; }.community-banner__art { position:relative; align-self:stretch; }.community-banner__art img { position:absolute; z-index:2; left:55px; bottom:-45px; width:150px; }.mini-tree { position:absolute; left:8px; bottom:-40px; width:100px; height:200px; border-radius:50% 50% 16px 16px; background:#4fa665; transform:rotate(-6deg); }.mini-tree--two { left:145px; bottom:-60px; background:#91c96e; transform:scale(.7) rotate(8deg); }
+@media (max-width: 960px) { .forest-hero { min-height:760px; }.forest-hero__copy { width:100%; }.forest-hero__scene { width:75%; height:54%; opacity:.9; }.news-strip { grid-template-columns:1fr 1fr; }.news-strip__title { grid-column:1/-1; }.news-strip > button { display:none; }.place-gallery { grid-template-columns:repeat(2,1fr); }.community-banner { grid-template-columns:180px 1fr; }.community-banner > button { grid-column:2; justify-self:start; }.community-banner__art img { left:20px; } }
+@media (max-width: 640px) { .forest-hero { min-height:700px; padding:60px 20px 160px; }.forest-hero h1 { font-size:48px; }.forest-lead { font-size:15px; }.forest-search { padding-left:14px; }.forest-search button { padding:12px 15px; }.forest-hero__scene { width:100%; height:43%; bottom:65px; }.forest-hero__scene img { width:115px; }.forest-content { width:min(100% - 28px,1320px); }.news-strip { grid-template-columns:1fr; gap:14px; padding:22px; }.news-strip article { padding:12px 0 0; border-left:0; border-top:1px solid #e4ebdf; }.discovery-section { padding-top:75px; }.place-gallery { grid-template-columns:1fr; }.community-banner { grid-template-columns:1fr; padding:30px; }.community-banner__art { display:none; }.community-banner > button { grid-column:auto; }.theme-tabs { justify-content:flex-start; overflow-x:auto; flex-wrap:nowrap; padding-bottom:5px; }.theme-tabs button { flex:0 0 auto; } }
+</style>
