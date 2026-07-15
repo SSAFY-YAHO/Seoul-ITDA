@@ -17,7 +17,7 @@ from app.routers.locations import router as locations_router
 from app.routers.posts import router as posts_router
 from app.services.data_service import load_attractions_from_file
 from sqlalchemy import inspect, text
-
+# asjf;oiaje;ajflasdjf;lasjfl;
 
 def ensure_attraction_detail_columns() -> None:
     """기존 SQLite DB에도 상세 정보 컬럼을 비파괴 방식으로 추가한다."""
