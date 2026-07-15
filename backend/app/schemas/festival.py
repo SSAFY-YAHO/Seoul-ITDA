@@ -14,6 +14,8 @@ class FestivalResponse(BaseModel):
     imageUrl: str
     homepageUrl: str
     phone: str
+    longitude: float | None = None
+    latitude: float | None = None
     startDate: str | None = None
     endDate: str | None = None
 
