@@ -9,6 +9,15 @@ const props = defineProps({
 const emit = defineEmits(["close"]);
 
 const hasImage = computed(() => Boolean(props.festival?.imageUrl));
+const mapEmbedUrl = computed(() => {
+  if (!props.festival) return "";
+  const hasCoordinates = Number.isFinite(Number(props.festival.latitude))
+    && Number.isFinite(Number(props.festival.longitude));
+  const query = hasCoordinates
+    ? `${props.festival.latitude},${props.festival.longitude}`
+    : [props.festival.title, props.festival.address || props.festival.place].filter(Boolean).join(" ");
+  return query ? `https://maps.google.com/maps?q=${encodeURIComponent(query)}&z=15&output=embed` : "";
+});
 
 function handleKeydown(event) {
   if (event.key === "Escape") {
@@ -87,6 +96,19 @@ onBeforeUnmount(() => {
           <div v-if="festival.category" class="detail-row">
             <span>카테고리</span><strong>{{ festival.category }}</strong>
           </div>
+        </div>
+
+        <div v-if="mapEmbedUrl" class="festival-detail-map">
+          <div>
+            <span>LOCATION</span>
+            <strong>축제 위치</strong>
+          </div>
+          <iframe
+            :src="mapEmbedUrl"
+            :title="`${festival.title} 위치 지도`"
+            loading="lazy"
+            referrerpolicy="no-referrer-when-downgrade"
+          />
         </div>
       </div>
 
