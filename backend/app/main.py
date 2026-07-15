@@ -35,7 +35,7 @@ async def lifespan(_: FastAPI):
         has_posts = session.query(Post.id).first() is not None
         if not has_posts:
             sample_posts = [
-                Post(
+                Post(   
                     title='서울 도심 반나절 코스 추천',
                     content='종로와 을지로를 중심으로 걸어서 즐길 수 있는 코스를 공유합니다.',
                     edit_password='demo1234',
