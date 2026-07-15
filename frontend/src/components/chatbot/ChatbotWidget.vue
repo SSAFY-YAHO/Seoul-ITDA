@@ -97,10 +97,17 @@ async function sendMessage(question = input.value) {
       sources: [],
       metaLabel: "연결 오류",
     });
+  } catch (error) {
+    messages.value.push({ role: "assistant", content: error.message || "서버 응답을 받지 못했습니다.", sources: [], metaLabel: "연결 오류" });
   } finally {
     isLoading.value = false;
     scrollToBottom();
+    scrollToBottom();
   }
+}
+
+function resetChat() {
+  messages.value = [initialMessage];
 }
 
 function handleKeydown(event) {
