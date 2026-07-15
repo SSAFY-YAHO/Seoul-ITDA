@@ -272,7 +272,7 @@ watch(messages, () => {
       aria-label="서울잇다 AI 대화 열기"
     >
       <span class="chatbot-toggle__mascot"><img :src="brandMark" alt="서울잇다 해치" /></span>
-      <span class="chatbot-toggle__copy"><span>AI와 이야기하기</span></span>
+      <span class="chatbot-toggle__copy"><span>서울 정보 물어보기</span></span>
       <span class="chatbot-toggle__arrow" aria-hidden="true">›</span>
     </button>
   </div>
