@@ -78,7 +78,7 @@ onMounted(loadPosts);
           </span>
         </button>
       </div>
-      <nav v-if="totalPages > 1" class="community-pagination" aria-label="게시글 페이지 이동">
+      <nav class="community-pagination" aria-label="게시글 페이지 이동">
         <button type="button" :disabled="currentPage === 1" aria-label="이전 페이지" @click="goToPage(currentPage - 1)">← 이전</button>
         <button
           v-for="page in visiblePages"
