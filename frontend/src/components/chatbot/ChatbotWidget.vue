@@ -7,9 +7,9 @@ const STORAGE_KEY = "seoul-itda-chat-messages";
 const MAX_STORED_MESSAGES = 30;
 const INITIAL_MESSAGE = {
   role: "assistant",
-  content: "안녕하세요! 서울 관광지, 축제, 음식점과 커뮤니티 이야기를 데이터에 근거해 안내해드릴게요.",
+  content: "안녕하세요! 편하게 대화해도 좋아요. 서울 장소를 찾을 때는 내부 데이터를 먼저 살펴보고, 없으면 웹에서 찾아드릴게요.",
   sources: [],
-  metaLabel: "AI 데이터 안내",
+  metaLabel: "AI 대화",
 };
 
 const isOpen = ref(false);
@@ -19,15 +19,21 @@ const messages = ref([{ ...INITIAL_MESSAGE }]);
 const messageListRef = ref(null);
 
 const suggestions = [
+  "안녕! 오늘 하루는 어땠어?",
   "이번 주 서울 축제 알려줘",
   "비 오는 날 갈 만한 곳은?",
   "가족과 가기 좋은 장소 추천해줘",
-  "커뮤니티에서 인기 있는 이야기는?",
 ];
 
 const hasConversation = computed(() => messages.value.length > 1);
 const canSend = computed(() => input.value.trim().length > 0 && !isLoading.value);
-const connectionLabel = computed(() => isLoading.value ? "답변 생성 중" : "데이터 연결됨");
+const connectionLabel = computed(() => isLoading.value ? "답변 생성 중" : "대화 준비됨");
+
+const MODE_LABELS = {
+  conversation: "AI 대화",
+  database: "서울잇다 데이터",
+  web: "웹 검색",
+};
 
 function togglePanel() {
   isOpen.value = !isOpen.value;
@@ -74,21 +80,28 @@ async function sendMessage(question = input.value) {
   const trimmed = String(question || "").trim();
   if (!trimmed || isLoading.value) return;
 
+  const history = messages.value
+    .filter((message) => ["user", "assistant"].includes(message?.role) && message?.content)
+    .slice(-10)
+    .map((message) => ({ role: message.role, content: message.content }));
+
   messages.value.push({ role: "user", content: trimmed, sources: [] });
   input.value = "";
   isLoading.value = true;
   scrollToBottom();
 
   try {
-    const response = await sendChatMessage({ question: trimmed });
+    const response = await sendChatMessage({ question: trimmed, history });
     const content = response?.answer || response?.message
       || "답변을 생성하지 못했습니다. 잠시 후 다시 시도해주세요.";
-    const sources = Array.isArray(response?.sources) ? response.sources : [];
+    const sources = Array.isArray(response?.sources)
+      ? response.sources.map(normalizeSource).filter(Boolean)
+      : [];
     messages.value.push({
       role: "assistant",
       content,
       sources,
-      metaLabel: response?.fallback ? "데이터 기반 안내" : "AI 데이터 안내",
+      metaLabel: response?.fallback ? "연결 안내" : MODE_LABELS[response?.mode] || "AI 대화",
     });
   } catch (_error) {
     messages.value.push({
@@ -118,9 +131,42 @@ function resetChat() {
 }
 
 function formatSource(source) {
-  return String(source)
-    .replace(/^attraction:/, "장소 · ")
-    .replace(/^post:/, "커뮤니티 · #");
+  if (!source || typeof source !== "object") return "";
+  const prefix = {
+    attraction: "장소 · ",
+    post: "커뮤니티 · ",
+    web: "웹 · ",
+  }[source.type] || "출처 · ";
+  return `${prefix}${source.title || source.url || "출처"}`;
+}
+
+function normalizeSource(source) {
+  if (source && typeof source === "object") {
+    return {
+      type: source.type || "web",
+      title: source.title || source.url || "출처",
+      url: source.url || "",
+    };
+  }
+
+  if (typeof source === "string") {
+    const isPost = source.startsWith("post:");
+    return {
+      type: isPost ? "post" : "attraction",
+      title: source.replace(/^(attraction|post):/, ""),
+      url: "",
+    };
+  }
+
+  return null;
+}
+
+function sourceKey(source, index) {
+  return `${source.type}-${source.url || source.title}-${index}`;
+}
+
+function sourceTarget(source) {
+  return source.url?.startsWith("/") ? undefined : "_blank";
 }
 
 onMounted(() => {
@@ -151,7 +197,7 @@ watch(messages, () => {
         </div>
       </header>
 
-      <p class="chat-panel__notice">제공된 서울 관광·축제·커뮤니티 데이터 안에서 답변합니다.</p>
+      <p class="chat-panel__notice">일반 대화와 서울 장소 탐색을 도와드려요. 장소는 내부 데이터부터 확인합니다.</p>
 
       <div ref="messageListRef" class="chat-panel__messages" aria-live="polite">
         <article
@@ -164,9 +210,18 @@ watch(messages, () => {
             <span v-if="message.metaLabel" class="chat-bubble__label">{{ message.metaLabel }}</span>
             <p>{{ message.content }}</p>
             <div v-if="message.sources?.length" class="chat-bubble__sources">
-              <span v-for="source in message.sources" :key="source" class="source-chip">
-                {{ formatSource(source) }}
-              </span>
+              <template v-for="(source, sourceIndex) in message.sources" :key="sourceKey(source, sourceIndex)">
+                <a
+                  v-if="source.url"
+                  class="source-chip source-chip--link"
+                  :href="source.url"
+                  :target="sourceTarget(source)"
+                  :rel="sourceTarget(source) ? 'noopener noreferrer' : undefined"
+                >
+                  {{ formatSource(source) }}
+                </a>
+                <span v-else class="source-chip">{{ formatSource(source) }}</span>
+              </template>
             </div>
           </div>
         </article>
@@ -198,7 +253,7 @@ watch(messages, () => {
           v-model="input"
           rows="2"
           maxlength="500"
-          placeholder="서울 정보에 대해 질문해보세요"
+          placeholder="편하게 대화하거나 서울 장소를 물어보세요"
           aria-label="질문 입력"
           :disabled="isLoading"
           @keydown="handleKeydown"
@@ -214,10 +269,10 @@ watch(messages, () => {
       class="chatbot-toggle"
       type="button"
       @click="togglePanel"
-      aria-label="서울잇다 AI 안내 열기"
+      aria-label="서울잇다 AI 대화 열기"
     >
       <span class="chatbot-toggle__mascot"><img :src="brandMark" alt="서울잇다 해치" /></span>
-      <span class="chatbot-toggle__copy"><span>서울 정보 물어보기</span></span>
+      <span class="chatbot-toggle__copy"><span>AI와 이야기하기</span></span>
       <span class="chatbot-toggle__arrow" aria-hidden="true">›</span>
     </button>
   </div>

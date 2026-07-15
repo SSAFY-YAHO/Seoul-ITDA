@@ -232,3 +232,43 @@
 ### Rules
 - `OPENAI_API_KEY`가 없거나 OpenAI 호출 실패 시 로컬 데이터 기반 fallback 답변을 반환합니다.
 - 답변에는 `sources`로 근거 레코드를 함께 반환합니다.
+
+## 8) Chat v2
+- Method: `POST`
+- Path: `/api/chat`
+- Description: 일반 대화를 지원하며, 장소 탐색은 내부 DB를 먼저 검색하고 결과가 없을 때만 웹 검색을 사용합니다.
+
+### Request Body
+```json
+{
+  "question": "그중 조용한 곳은?",
+  "history": [
+    {"role": "user", "content": "성수동 데이트 장소 추천해줘"},
+    {"role": "assistant", "content": "후보를 알려드릴게요."}
+  ]
+}
+```
+
+### Success Response
+```json
+{
+  "answer": "답변 내용",
+  "sources": [
+    {"type": "attraction", "title": "장소명", "url": "https://map.naver.com/..."}
+  ],
+  "provider": "openai",
+  "mode": "database",
+  "used_openai": true,
+  "fallback": false
+}
+```
+
+### Modes
+- `conversation`: 일반 대화. 장소 DB를 조회하지 않습니다.
+- `database`: 내부 장소·커뮤니티 데이터에 검색 결과가 있습니다.
+- `web`: 내부 검색 결과가 없어 웹 검색을 시도했습니다.
+
+### Rules
+- `history`는 최근 10건까지 전달합니다.
+- 웹 검색은 `CHAT_WEB_SEARCH_ENABLED=true`, 유효한 `OPENAI_API_KEY`, 웹 검색 지원 모델이 모두 필요합니다.
+- 내부 DB 결과가 한 건이라도 있으면 웹 검색을 호출하지 않습니다.

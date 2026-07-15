@@ -15,7 +15,7 @@ from app.routers.festivals import router as festivals_router
 from app.routers.health import router as health_router
 from app.routers.locations import router as locations_router
 from app.routers.posts import router as posts_router
-from app.services.data_service import load_attractions_from_file
+from app.services.data_service import contains_mojibake, load_attractions_from_file
 from sqlalchemy import inspect, text
 # asjf;oiaje;ajflasdjf;lasjfl;
 
@@ -46,7 +46,15 @@ async def lifespan(_: FastAPI):
         needs_image_sync = session.query(Attraction.id).filter(Attraction.image_url != '').first() is None
         needs_contact_sync = session.query(Attraction.id).filter(Attraction.telephone != '').first() is None
         needs_coordinate_sync = session.query(Attraction.id).filter(Attraction.longitude.is_not(None)).first() is None
-        if not has_attractions or needs_image_sync or needs_contact_sync or needs_coordinate_sync:
+        encoding_samples = session.query(Attraction.name).limit(20).all()
+        needs_encoding_sync = any(contains_mojibake(name) for (name,) in encoding_samples)
+        if (
+            not has_attractions
+            or needs_image_sync
+            or needs_contact_sync
+            or needs_coordinate_sync
+            or needs_encoding_sync
+        ):
             default_data_path = Path(settings.root_dir) / settings.seoul_data_path
             try:
                 load_attractions_from_file(session, str(default_data_path))

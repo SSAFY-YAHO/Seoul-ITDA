@@ -97,3 +97,19 @@
 - 검증
   - `종로구 관광지 추천해줘` 질의에 데이터 근거 응답 확인
   - `OPENAI_API_KEY` 미설정 상태 fallback 응답 확인
+
+### 2026-07-15: 대화형 챗봇과 DB 우선 장소 탐색
+- 구현 파일
+  - `backend/app/services/chat_service.py`
+  - `backend/app/schemas/chat.py`
+  - `backend/app/routers/chat.py`
+  - `frontend/src/components/chatbot/ChatbotWidget.vue`
+- 작업 내용
+  - 일반 대화에서는 장소 DB를 조회하지 않는 대화형 응답 경로 추가
+  - 장소 탐색 질문은 서울잇다 DB와 커뮤니티를 우선 검색
+  - 내부 결과가 없을 때만 OpenAI Responses API의 웹 검색 도구 호출
+  - 최근 대화 10건 전달 및 DB/웹 출처 링크 표시
+  - 적재 원본의 UTF-8/EUC-KR 깨짐 문자열을 DB 저장 전에 복구
+- 검증
+  - 일반 대화, DB 우선, DB 미검색 시 웹 검색, 후속 질문, 웹 출처 파싱 테스트 6건 통과
+  - 프론트엔드 프로덕션 빌드 통과
