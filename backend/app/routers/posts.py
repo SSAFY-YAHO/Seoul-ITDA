@@ -19,6 +19,7 @@ from app.services.post_service import (
     create_post,
     delete_post,
     get_post_and_increase_views,
+    like_post,
     list_posts,
     update_post,
 )
@@ -47,6 +48,14 @@ def get_post_detail_api(post_id: int, db: Session = Depends(get_db)):
     if post is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Post not found')
     return post
+
+
+@router.post('/{post_id}/like', response_model=PostResponse)
+def like_post_api(post_id: int, db: Session = Depends(get_db)):
+    try:
+        return like_post(db, post_id)
+    except PostNotFoundError:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Post not found') from None
 
 
 @router.put('/{post_id}', response_model=PostResponse)

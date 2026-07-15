@@ -1,5 +1,19 @@
 # Backend Troubleshooting
 
+## 2026-07-15: 프론트 빌드 작업 디렉터리 오류
+
+- 증상: `npm run build` 실행 시 `backend/package.json`을 찾을 수 없다는 ENOENT 발생
+- 원인: 백엔드 구문 검사와 프론트 빌드를 `backend` 작업 디렉터리에서 연속 실행함
+- 조치: 프론트 빌드는 `frontend` 디렉터리에서 별도로 실행
+- 결과: 코드나 의존성 문제가 아닌 실행 위치 문제로 확인
+
+## 2026-07-15: 기존 SQLite 게시글 테이블의 좋아요 컬럼 호환
+
+- 증상: 모델에 `likes`를 추가해도 기존 SQLite 테이블에는 컬럼이 자동 추가되지 않음
+- 원인: `Base.metadata.create_all()`은 기존 테이블의 컬럼 변경을 수행하지 않음
+- 조치: 시작 시 스키마를 확인하고 `likes`가 없을 때만 기본값 0 컬럼을 추가
+- 결과: 기존 게시글과 DB를 유지하면서 좋아요 API가 정상 동작함
+
 ## 2026-07-14: DB 경로 이슈
 - 증상: `sqlite3.OperationalError: unable to open database file`
 - 원인: 작업 디렉토리와 `DATABASE_URL` 상대 경로 불일치
