@@ -19,6 +19,42 @@ CONTENT_TYPE_MAP: dict[str, str] = {
     '39': '음식점',
 }
 
+MOJIBAKE_MARKERS = frozenset('ÃÂêëìíðå¾¿½')
+
+
+def _text_quality(value: str) -> int:
+    korean_count = sum('가' <= character <= '힣' for character in value)
+    marker_count = sum(character in MOJIBAKE_MARKERS for character in value)
+    control_count = sum(0x80 <= ord(character) <= 0x9F for character in value)
+    return korean_count * 4 - marker_count * 2 - control_count * 3
+
+
+def repair_mojibake(value: object) -> str:
+    text = str(value or '').strip()
+    if not text:
+        return ''
+
+    candidates = [text]
+    for source_encoding, target_encoding in (
+        ('latin1', 'utf-8'),
+        ('cp1252', 'utf-8'),
+        ('latin1', 'euc-kr'),
+    ):
+        try:
+            candidates.append(text.encode(source_encoding).decode(target_encoding))
+        except (UnicodeEncodeError, UnicodeDecodeError):
+            continue
+
+    return max(candidates, key=_text_quality)
+
+
+def contains_mojibake(value: str) -> bool:
+    if not value:
+        return False
+    return any(character in MOJIBAKE_MARKERS for character in value) or any(
+        0x80 <= ord(character) <= 0x9F for character in value
+    )
+
 
 def _extract_district(addr1: str) -> str:
     parts = [part for part in addr1.split() if part]
@@ -36,7 +72,7 @@ def _to_float(value: object) -> float | None:
 
 def _normalize_items(raw: object) -> tuple[list[dict], str]:
     if isinstance(raw, dict) and isinstance(raw.get('items'), list):
-        content_type = str(raw.get('contentType', '')).strip()
+        content_type = repair_mojibake(raw.get('contentType', ''))
         return [item for item in raw['items'] if isinstance(item, dict)], content_type
 
     if isinstance(raw, list):
@@ -61,7 +97,6 @@ def _list_data_files(path: Path) -> list[Path]:
 
 def load_attractions_from_file(db: Session, file_path: str) -> dict[str, int | str]:
     path = Path(file_path)
-
     files = _list_data_files(path)
     if not files:
         raise FileNotFoundError(f'Data file not found: {file_path}')
@@ -78,10 +113,10 @@ def load_attractions_from_file(db: Session, file_path: str) -> dict[str, int | s
             content_id = str(item.get('contentid', '')).strip()
             content_type_id = str(item.get('contenttypeid', '')).strip()
             source_id = f'{content_type_id}:{content_id}' if content_type_id else content_id
-            name = str(item.get('title', '')).strip()
-            addr1 = str(item.get('addr1', '')).strip()
-            addr2 = str(item.get('addr2', '')).strip()
-            tel = str(item.get('tel', '')).strip()
+            name = repair_mojibake(item.get('title', ''))
+            addr1 = repair_mojibake(item.get('addr1', ''))
+            addr2 = repair_mojibake(item.get('addr2', ''))
+            tel = repair_mojibake(item.get('tel', ''))
             image_url = str(item.get('firstimage', '')).strip()
             thumbnail_url = str(item.get('firstimage2', '')).strip()
             longitude = _to_float(item.get('mapx'))
@@ -143,7 +178,6 @@ def load_attractions_from_file(db: Session, file_path: str) -> dict[str, int | s
                 updated += 1
 
     db.commit()
-
     return {
         'message': 'Seoul TourAPI data load completed',
         'loaded': loaded,

@@ -18,8 +18,14 @@ services:
         value: data
       - key: CHAT_AI_PROVIDER
         value: openai
+      - key: CHAT_WEB_SEARCH_ENABLED
+        value: true
       - key: OPENAI_MODEL
-        value: gpt-4o-mini
+        value: gpt-5-mini
+      - key: OPENAI_WEB_SEARCH_MODEL
+        value: gpt-5-mini
+      - key: OPENAI_WEB_SEARCH_TIMEOUT_SEC
+        value: 60
       - key: OPENAI_API_KEY
         sync: false
       - key: CORS_ORIGINS

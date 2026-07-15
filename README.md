@@ -54,6 +54,11 @@ data loading.
 For production, set `CHAT_AI_PROVIDER=openai` unless you intentionally run a local Ollama service in the same
 environment. `local` should be treated as an explicit opt-in deployment mode.
 
+The chatbot supports normal multi-turn conversation and automatically detects place-search questions. Place
+searches use the local attraction/community database first. Only when no local match exists and
+`CHAT_WEB_SEARCH_ENABLED=true` does the backend call the OpenAI Responses API web search tool. Configure the
+search-capable model separately with `OPENAI_WEB_SEARCH_MODEL`.
+
 ## 기본 엔드포인트
 
 - `GET /` : 앱 메타 정보
