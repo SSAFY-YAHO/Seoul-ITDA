@@ -99,6 +99,20 @@ function getFestivalTone(festival) {
   return `festival-tone-${tone + 1}`;
 }
 
+const festivalColorMap = computed(() => {
+  const ids = [...new Set(festivalItems.value.map((festival) => String(festival.id)))]
+    .sort((a, b) => a.localeCompare(b, "ko", { numeric: true }));
+  const colors = new Map();
+  ids.forEach((id, index) => {
+    const hue = Math.round((index * 137.508 + 88) % 360);
+    colors.set(id, {
+      backgroundColor: `hsl(${hue} 55% 79%)`,
+      color: "#1f2521",
+    });
+  });
+  return colors;
+});
+
 const practicalFestivalGroups = computed(() => {
   const monthStart = new Date(currentMonth.value.getFullYear(), currentMonth.value.getMonth(), 1);
   const monthEnd = new Date(currentMonth.value.getFullYear(), currentMonth.value.getMonth() + 1, 1);
@@ -149,6 +163,7 @@ const miniCalendarDays = computed(() => {
       return {
         festival,
         tone: getFestivalTone(festival),
+        color: festivalColorMap.value.get(String(festival.id)),
         isFavorite: favoriteIds.value.includes(String(festival.id)),
         lane,
         isStart: date.getTime() === dateOnly(range.start).getTime(),
@@ -387,7 +402,7 @@ onMounted(() => {
                     [item.tone]: true,
                   }"
                   :title="item.festival.title"
-                  :style="{ gridRow: item.lane + 1 }"
+                  :style="{ gridRow: item.lane + 1, ...item.color }"
                   role="button"
                   tabindex="0"
                   :aria-label="`${item.festival.title} ${item.isFavorite ? '찜 해제' : '찜하기'}`"
