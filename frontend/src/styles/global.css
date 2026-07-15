@@ -478,7 +478,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 
 /* Content pages */
 .portal-page-hero { display:flex; align-items:flex-end; justify-content:space-between; gap:24px; min-height:190px; padding:36px 40px; overflow:hidden; border-radius:12px; background:linear-gradient(120deg,#e5f4fd,#f4f9fc 60%,#d5ecfa); }.portal-page-hero p { margin:0 0 8px; color:#1686c8; font-size:11px; font-weight:900; letter-spacing:.16em; }.portal-page-hero h1 { margin:0 0 8px; color:#173f68; font-size:clamp(32px,4vw,48px); }.portal-page-hero span { color:#5d7488; }
-.app-main > .page-shell { padding-top:38px; }.app-main > .page-shell::before { content:"서울 시민과 여행자를 위한 지역정보"; display:block; margin:0 0 18px; color:#1686c8; font-size:12px; font-weight:900; letter-spacing:.14em; }
+.app-main > .page-shell { padding-top:38px; }.app-main > .page-shell::before { display:none; content:none; }
 .app-main > .page-shell > .section-card { border:1px solid #dce7ef; border-radius:12px; background:#fff; box-shadow:0 10px 30px rgba(19,61,96,.06); }
 .app-main > .page-shell .section-label { color:#1686c8; }.app-main > .page-shell h1,.app-main > .page-shell h2 { color:#173c61; }
 .app-main .btn { border-radius:6px; }.app-main .btn--primary { background:#173f68; color:#fff; }.app-main .btn--secondary { border-color:#a8c2d6; background:#eef7fd; color:#174f78; }.app-main .btn--ghost { border:1px solid #d8e3eb; background:#fff; color:#52697e; }
@@ -812,19 +812,22 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 
 /* Seoul storybook landing */
 .home-page { background: #d2e1b5; }
+.app-main > .home-page { padding-top: 0; }
 .home-hero {
   min-height: min(760px, 82vh);
   grid-template-columns: 0.72fr 1.28fr;
   align-items: center;
-  background: #f6f8ef url('../assets/seoul-storybook-hero.png') center / cover no-repeat;
+  isolation: isolate;
+  background: #f6f8ef;
 }
-.home-hero::before { background: linear-gradient(90deg, rgba(246,248,239,.98) 0%, rgba(246,248,239,.9) 34%, rgba(246,248,239,0) 62%); }
+.home-hero__background { position: absolute; z-index: 0; inset: 0; width: 100%; height: 100%; max-width: none; object-fit: cover; object-position: center; pointer-events: none; }
+.home-hero::before { z-index: 1; background: linear-gradient(90deg, rgba(246,248,239,.98) 0%, rgba(246,248,239,.9) 34%, rgba(246,248,239,0) 62%); }
 .home-hero::after { display: none; }
-.home-hero .hero-copy { align-self: center; padding-bottom: 5%; }
+.home-hero .hero-copy { z-index: 2; align-self: center; padding-bottom: 5%; }
 .home-hero .hero-copy h1 { max-width: 9ch; color: #26382e; font-family: Georgia, 'Noto Serif KR', serif; font-size: clamp(3.2rem, 5vw, 5.6rem); font-weight: 400; letter-spacing: -.055em; }
 .home-hero .hero-copy h1 em { display: inline-block; color: #3f725a; font-style: normal; font-weight: 400; white-space: nowrap; }
 .home-hero .hero-copy > p { color: #52645a; font-size: 1rem; }
-.home-hero .hero-visual { min-height: 520px; }
+.home-hero .hero-visual { position: relative; z-index: 2; min-height: 520px; }
 .home-eyebrow { color: #62816c; }
 .btn--paper { background: #fbfcf7; color: #385d49; border: 1px solid rgba(47,80,62,.14); box-shadow: 0 8px 22px rgba(48,81,62,.08); }
 .btn--paper:hover { background: white; }

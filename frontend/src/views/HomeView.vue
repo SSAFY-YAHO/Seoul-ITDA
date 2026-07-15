@@ -2,6 +2,7 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import brandMark from "../assets/mascot.png";
+import heroBackground from "../assets/seoul-storybook-hero.png";
 import { fetchLocations } from "../api/locations";
 import { fetchFestivals } from "../api/festivals";
 import { parseFestivalDateRange } from "../utils/festivalDate";
@@ -346,6 +347,7 @@ watch(visibleLocations, () => {
 <template>
   <div class="page-shell home-page">
     <section class="hero-section section-card home-hero">
+      <img class="home-hero__background" :src="heroBackground" alt="" aria-hidden="true" />
       <div class="hero-copy">
         <span class="home-eyebrow">SEOUL, CONNECTED</span>
         <h1>서울과<br /><em>다정하게 잇다</em></h1>
