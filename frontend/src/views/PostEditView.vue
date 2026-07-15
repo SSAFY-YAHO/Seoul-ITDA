@@ -57,7 +57,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="page-shell">
+  <div class="page-shell community-page community-page--form">
     <section class="section-card section-block">
       <div v-if="loading" class="loading-state">
         <strong>게시글 정보를 불러오는 중입니다.</strong>

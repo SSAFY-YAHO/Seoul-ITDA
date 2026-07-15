@@ -856,6 +856,20 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
   margin-inline: 0;
   padding-inline: max(var(--page-gutter), calc((100% - 1200px) / 2));
 }
+
+/* Storybook community pages */
+.app-main:has(.community-page) { background:#e6efd1; }
+.community-page { color:#34483a; }
+.app-main > .community-page { max-width:1200px; padding-top:46px; padding-bottom:90px; }
+.app-main > .community-page::before { content:'SEOUL STORIES · COMMUNITY'; color:#64806a; }
+.community-page .portal-page-hero { position:relative; min-height:250px; overflow:hidden; border:0; border-radius:24px; background:linear-gradient(125deg,#f6f8ef 0%,#f6f8ef 54%,#c8dfb5 54%,#a7cfb6 100%); box-shadow:0 18px 42px rgba(49,77,57,.1); }
+.community-page .portal-page-hero::after { content:'✦'; position:absolute; right:9%; top:12%; color:rgba(255,255,255,.72); font-size:8rem; transform:rotate(12deg); }
+.community-page .portal-page-hero > * { position:relative; z-index:1; }.community-page .portal-page-hero p,.community-page .section-label { color:#62816c; }.community-page .portal-page-hero h1,.community-page h2 { color:#2e4636; font-family:Georgia,'Noto Serif KR',serif; font-weight:400; }.community-page .portal-page-hero h1 { font-size:clamp(2.8rem,5vw,4.8rem); }.community-page .portal-page-hero span { color:#5b6d60; }
+.community-page > .section-card { border:1px solid rgba(52,91,67,.12) !important; border-radius:22px !important; background:rgba(250,252,245,.84) !important; box-shadow:0 18px 42px rgba(49,77,57,.1) !important; }
+.community-page .btn--primary { background:#3f6b52; color:#fff; }.community-page .btn--primary:hover { background:#315941; }.community-page .btn--secondary { border-color:#b7cbb6; background:#edf4e5; color:#42634e; }.community-page .btn--ghost { border-color:#cfdbc9; background:#fafcf6; color:#506858; }
+.community-page .input,.community-page .textarea,.community-page .select { border-color:#cbd8c8; background:#fcfdf9; }.community-page .input:focus,.community-page .textarea:focus,.community-page .select:focus { border-color:#5d8a6c; box-shadow:0 0 0 3px rgba(93,138,108,.13); }
+.community-page--form,.community-page--detail { max-width:900px !important; }.community-page--form > .section-card,.community-page--detail > .section-card { padding:clamp(26px,5vw,58px); }.community-page--form .form-grid { max-width:720px; margin:28px auto 0; }.community-page--form .textarea { min-height:260px; }.community-page--detail .detail-card { border:1px solid #d8e2d3; border-radius:16px; background:#f8faf3; box-shadow:none; }.community-page--detail .detail-card:first-of-type { min-height:220px; padding:34px; font-family:Georgia,'Noto Serif KR',serif; font-size:1.08rem; line-height:1.9; }
+@media(max-width:640px){.community-page .portal-page-hero{align-items:flex-start;min-height:310px;flex-direction:column}.app-main>.community-page{padding-top:28px}.community-page--form> .section-card,.community-page--detail> .section-card{padding:24px 18px}}
 .home-about::before,
 .home-about::after {
   content: '';

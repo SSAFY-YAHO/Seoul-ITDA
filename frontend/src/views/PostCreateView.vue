@@ -40,7 +40,7 @@ async function submitPost() {
 </script>
 
 <template>
-  <div class="page-shell">
+  <div class="page-shell community-page community-page--form">
     <section class="section-card section-block">
       <div class="section-heading">
         <div>
