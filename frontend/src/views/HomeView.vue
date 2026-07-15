@@ -12,7 +12,9 @@ const locations = ref([]);
 const festivals = ref([]);
 const loading = ref(true);
 const error = ref("");
+const exploreMode = ref("theme");
 const activeTheme = ref("전체");
+const activeDistrict = ref("전체");
 
 const themes = ["전체", "관광지", "문화", "쇼핑", "레포츠", "숙박"];
 
@@ -25,17 +27,24 @@ const categoryNames = {
   festival: "축제",
 };
 
+const districts = computed(() => [
+  "전체",
+  ...new Set(locations.value.map((item) => item.district).filter(Boolean)),
+]);
+
 const filteredLocations = computed(() => {
   const keyword = query.value.trim().toLowerCase();
   return locations.value
     .filter((item) => {
       const category = categoryNames[item.category] || item.category || "관광지";
       const themeMatched = activeTheme.value === "전체" || category === activeTheme.value;
+      const districtMatched = activeDistrict.value === "전체" || item.district === activeDistrict.value;
       const searchText = [item.name, item.title, item.description, item.address, item.tags]
         .filter(Boolean)
         .join(" ")
         .toLowerCase();
-      return themeMatched && (!keyword || searchText.includes(keyword));
+      const filterMatched = exploreMode.value === "theme" ? themeMatched : districtMatched;
+      return filterMatched && (!keyword || searchText.includes(keyword));
     })
     .slice(0, 8);
 });
@@ -49,6 +58,25 @@ const upcomingFestivals = computed(() => {
     .sort((a, b) => (a.range?.start || today) - (b.range?.start || today))
     .slice(0, 3);
 });
+
+const galleryFestivals = computed(() =>
+  festivals.value
+    .filter((item) => item.imageUrl || item.image_url || item.mainImage)
+    .slice(0, 6),
+);
+
+const overviewLocations = computed(() => locations.value.slice(0, 7));
+
+function festivalImage(item) {
+  return item.imageUrl || item.image_url || item.mainImage || "";
+}
+
+function selectOverviewLocation(location) {
+  query.value = location.name || location.title || "";
+  activeDistrict.value = location.district || "전체";
+  exploreMode.value = "region";
+  submitSearch();
+}
 
 function categoryLabel(item) {
   return categoryNames[item.category] || item.category || "서울 명소";
@@ -141,7 +169,11 @@ onMounted(loadHomeData);
           <p>삶 속으로 들어온 서울</p>
           <h2>취향대로 발견하는<br><em>우리 동네 이야기</em></h2>
         </header>
-        <div class="theme-tabs" role="tablist" aria-label="장소 테마">
+        <div class="explore-switch" role="tablist" aria-label="탐색 기준">
+          <button type="button" :class="{ active: exploreMode === 'region' }" @click="exploreMode = 'region'">지역</button>
+          <button type="button" :class="{ active: exploreMode === 'theme' }" @click="exploreMode = 'theme'">테마</button>
+        </div>
+        <div v-if="exploreMode === 'theme'" class="theme-tabs" role="tablist" aria-label="장소 테마">
           <button
             v-for="theme in themes"
             :key="theme"
@@ -150,6 +182,17 @@ onMounted(loadHomeData);
             @click="activeTheme = theme"
           >
             {{ theme }}
+          </button>
+        </div>
+        <div v-else class="theme-tabs district-tabs" role="tablist" aria-label="서울 지역">
+          <button
+            v-for="district in districts"
+            :key="district"
+            type="button"
+            :class="{ active: activeDistrict === district }"
+            @click="activeDistrict = district"
+          >
+            {{ district }}
           </button>
         </div>
 
@@ -174,6 +217,41 @@ onMounted(loadHomeData);
               <p>{{ location.description || "서울에서 만나는 특별한 장소입니다." }}</p>
               <span>{{ location.address || "주소 정보 준비 중" }}</span>
             </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="overview-section">
+        <header class="forest-heading">
+          <p>SEOUL AT A GLANCE</p>
+          <h2>서울잇다<br><em>한눈에 보기</em></h2>
+        </header>
+        <div class="overview-board">
+          <div class="river" aria-hidden="true"></div>
+          <span class="overview-label">SEOUL</span>
+          <button
+            v-for="(location, index) in overviewLocations"
+            :key="location.id || location.name"
+            type="button"
+            :class="`hotspot hotspot--${index + 1}`"
+            @click="selectOverviewLocation(location)"
+          >
+            {{ location.name || location.title }} →
+          </button>
+        </div>
+        <p class="overview-help">장소를 선택하면 해당 지역의 정보로 바로 이동합니다.</p>
+      </section>
+
+      <section v-if="galleryFestivals.length" class="gallery-section">
+        <div class="gallery-title">
+          <img :src="mascot" alt="" />
+          <div><small>서울의 장면들</small><h2>축제 갤러리</h2></div>
+          <button type="button" @click="router.push('/festivals')">전체 보기 →</button>
+        </div>
+        <div class="festival-gallery">
+          <article v-for="festival in galleryFestivals" :key="festival.id || festivalTitle(festival)">
+            <img :src="festivalImage(festival)" :alt="festivalTitle(festival)" loading="lazy" />
+            <div><small>{{ festivalDate(festival) }}</small><strong>{{ festivalTitle(festival) }}</strong></div>
           </article>
         </div>
       </section>
@@ -232,14 +310,30 @@ onMounted(loadHomeData);
 .news-strip > button { width:42px; height:42px; border:1px solid #dce7d7; border-radius:50%; background:#f7fbf4; color:#3b8850; font-size:21px; }
 .discovery-section { padding: 110px 0 70px; }
 .forest-heading { text-align:center; }.forest-heading h2 { margin:0; font-size:clamp(34px,4vw,58px); line-height:1.12; letter-spacing:-.05em; }
+.explore-switch { display:grid; grid-template-columns:1fr 1fr; width:min(480px,100%); margin:28px auto 12px; padding:5px; border:1px solid #bcd8b9; border-radius:999px; background:white; }
+.explore-switch button { padding:10px; border:0; border-radius:999px; background:transparent; color:#6d8374; font-weight:900; }
+.explore-switch button.active { background:#36a44e; color:white; box-shadow:0 6px 15px rgba(42,139,65,.2); }
 .theme-tabs { display:flex; justify-content:center; gap:8px; margin:30px 0 38px; flex-wrap:wrap; }.theme-tabs button.active { border-color:#359c4c; background:#359c4c; color:white; }
+.district-tabs { margin-top:12px; }
 .place-gallery { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:22px; }
 .place-tile { overflow:hidden; border:1px solid #dfe8da; border-radius:26px; background:white; box-shadow:0 14px 30px rgba(54,91,61,.07); transition:.25s ease; }.place-tile:hover { transform:translateY(-7px); box-shadow:0 20px 40px rgba(54,91,61,.13); }
 .place-tile__art { position:relative; height:150px; overflow:hidden; padding:18px; background:#bce1b3; }.place-tile__art span { position:relative; z-index:3; padding:6px 11px; border-radius:999px; background:rgba(255,255,255,.85); color:#327746; font-size:12px; font-weight:900; }.place-tile__art i { position:absolute; right:-10%; bottom:-45%; width:85%; height:130%; border-radius:50% 50% 0 0; background:#65b96d; transform:rotate(-12deg); }.place-tile__art::after { content:""; position:absolute; left:18%; bottom:0; width:56px; height:92px; border-radius:28px 28px 0 0; background:#fff6d7; border:5px solid #3e6a50; }
 .place-tile__art--2 { background:#c8e9e6; }.place-tile__art--2 i { background:#6ebec1; }.place-tile__art--3 { background:#f4df9e; }.place-tile__art--3 i { background:#efad5c; }.place-tile__art--4 { background:#cbd9ef; }.place-tile__art--4 i { background:#819fc9; }
 .place-tile__body { padding:20px; }.place-tile__body small { color:#399553; font-weight:900; }.place-tile__body h3 { margin:7px 0 9px; font-size:19px; }.place-tile__body p { display:-webkit-box; min-height:44px; margin:0 0 13px; overflow:hidden; color:#64786c; font-size:14px; -webkit-box-orient:vertical; -webkit-line-clamp:2; }.place-tile__body > span { display:block; overflow:hidden; color:#8a998f; font-size:12px; white-space:nowrap; text-overflow:ellipsis; }
 .forest-state { display:grid; place-items:center; gap:10px; min-height:220px; border:1px dashed #bad3b8; border-radius:28px; background:rgba(255,255,255,.65); color:#68806f; }.forest-state--error button { padding:9px 17px; border:0; border-radius:999px; background:#399a4f; color:white; font-weight:800; }
+.overview-section { margin:40px calc(50% - 50vw) 0; padding:90px max(7vw,24px) 105px; background:linear-gradient(180deg,#dff5f5,#eff9e5); }
+.overview-board { position:relative; width:min(1000px,100%); height:500px; margin:38px auto 15px; overflow:hidden; border:8px solid white; border-radius:36px; background:linear-gradient(145deg,#cce2b4,#eef1c5); box-shadow:0 22px 45px rgba(47,100,75,.16); }
+.overview-board::before,.overview-board::after { content:""; position:absolute; width:70%; height:120%; border:22px solid rgba(255,255,255,.5); border-radius:45%; transform:rotate(18deg); }
+.overview-board::before { left:-18%; top:-55%; }.overview-board::after { right:-22%; bottom:-70%; }
+.river { position:absolute; z-index:1; left:-10%; top:45%; width:120%; height:95px; background:#8ed7dc; transform:rotate(-8deg); box-shadow:inset 0 12px rgba(255,255,255,.25); }
+.overview-label { position:absolute; z-index:2; left:50%; top:50%; color:rgba(42,112,75,.14); font-size:100px; font-weight:1000; transform:translate(-50%,-50%) rotate(-8deg); }
+.hotspot { position:absolute; z-index:3; padding:10px 17px; border:3px solid white; border-radius:999px; background:#32af61; color:white; font-weight:900; box-shadow:0 8px 16px rgba(33,106,65,.24); transition:.2s ease; }.hotspot:hover { transform:translateY(-4px) scale(1.03); }
+.hotspot--1 { left:8%; top:17%; }.hotspot--2 { left:39%; top:12%; }.hotspot--3 { right:8%; top:26%; }.hotspot--4 { left:17%; bottom:21%; }.hotspot--5 { left:46%; bottom:12%; }.hotspot--6 { right:7%; bottom:25%; }.hotspot--7 { left:42%; top:47%; }
+.overview-help { text-align:center; color:#688075; }
+.gallery-section { display:grid; grid-template-columns:260px minmax(0,1fr); gap:25px; margin:0 calc(50% - 50vw); padding:75px max(7vw,24px); background:#eef8ef; }
+.gallery-title { display:grid; align-content:center; justify-items:start; }.gallery-title img { width:100px; }.gallery-title small { color:#3c9a51; font-weight:900; }.gallery-title h2 { margin:3px 0 18px; font-size:34px; }.gallery-title button { padding:9px 14px; border:1px solid #bdd8bd; border-radius:999px; background:white; color:#367a48; font-weight:800; }
+.festival-gallery { display:flex; gap:16px; overflow-x:auto; padding:8px 4px 18px; scroll-snap-type:x mandatory; }.festival-gallery article { position:relative; flex:0 0 230px; height:280px; overflow:hidden; border-radius:24px; background:#d5e7d3; scroll-snap-align:start; }.festival-gallery img { width:100%; height:100%; object-fit:cover; transition:.3s ease; }.festival-gallery article:hover img { transform:scale(1.05); }.festival-gallery article div { position:absolute; inset:auto 0 0; display:grid; padding:38px 16px 16px; background:linear-gradient(transparent,rgba(21,49,33,.82)); color:white; }.festival-gallery small { opacity:.8; }.festival-gallery strong { overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
 .community-banner { position:relative; display:grid; grid-template-columns:260px 1fr auto; align-items:center; gap:42px; min-height:280px; padding:40px 55px; overflow:hidden; border-radius:42px; background:linear-gradient(120deg,#cdeedc,#eaf5ce); }.community-banner h2 { margin:0 0 12px; font-size:clamp(30px,3.5vw,48px); line-height:1.08; }.community-banner > div > span { color:#587266; }.community-banner__art { position:relative; align-self:stretch; }.community-banner__art img { position:absolute; z-index:2; left:55px; bottom:-45px; width:150px; }.mini-tree { position:absolute; left:8px; bottom:-40px; width:100px; height:200px; border-radius:50% 50% 16px 16px; background:#4fa665; transform:rotate(-6deg); }.mini-tree--two { left:145px; bottom:-60px; background:#91c96e; transform:scale(.7) rotate(8deg); }
-@media (max-width: 960px) { .forest-hero { min-height:760px; }.forest-hero__copy { width:100%; }.forest-hero__scene { width:75%; height:54%; opacity:.9; }.news-strip { grid-template-columns:1fr 1fr; }.news-strip__title { grid-column:1/-1; }.news-strip > button { display:none; }.place-gallery { grid-template-columns:repeat(2,1fr); }.community-banner { grid-template-columns:180px 1fr; }.community-banner > button { grid-column:2; justify-self:start; }.community-banner__art img { left:20px; } }
-@media (max-width: 640px) { .forest-hero { min-height:700px; padding:60px 20px 160px; }.forest-hero h1 { font-size:48px; }.forest-lead { font-size:15px; }.forest-search { padding-left:14px; }.forest-search button { padding:12px 15px; }.forest-hero__scene { width:100%; height:43%; bottom:65px; }.forest-hero__scene img { width:115px; }.forest-content { width:min(100% - 28px,1320px); }.news-strip { grid-template-columns:1fr; gap:14px; padding:22px; }.news-strip article { padding:12px 0 0; border-left:0; border-top:1px solid #e4ebdf; }.discovery-section { padding-top:75px; }.place-gallery { grid-template-columns:1fr; }.community-banner { grid-template-columns:1fr; padding:30px; }.community-banner__art { display:none; }.community-banner > button { grid-column:auto; }.theme-tabs { justify-content:flex-start; overflow-x:auto; flex-wrap:nowrap; padding-bottom:5px; }.theme-tabs button { flex:0 0 auto; } }
+@media (max-width: 960px) { .forest-hero { min-height:760px; }.forest-hero__copy { width:100%; }.forest-hero__scene { width:75%; height:54%; opacity:.9; }.news-strip { grid-template-columns:1fr 1fr; }.news-strip__title { grid-column:1/-1; }.news-strip > button { display:none; }.place-gallery { grid-template-columns:repeat(2,1fr); }.gallery-section { grid-template-columns:1fr; }.gallery-title { grid-template-columns:auto 1fr auto; align-items:center; gap:15px; }.gallery-title h2 { margin:0; }.community-banner { grid-template-columns:180px 1fr; }.community-banner > button { grid-column:2; justify-self:start; }.community-banner__art img { left:20px; } }
+@media (max-width: 640px) { .forest-hero { min-height:700px; padding:60px 20px 160px; }.forest-hero h1 { font-size:48px; }.forest-lead { font-size:15px; }.forest-search { padding-left:14px; }.forest-search button { padding:12px 15px; }.forest-hero__scene { width:100%; height:43%; bottom:65px; }.forest-hero__scene img { width:115px; }.forest-content { width:min(100% - 28px,1320px); }.news-strip { grid-template-columns:1fr; gap:14px; padding:22px; }.news-strip article { padding:12px 0 0; border-left:0; border-top:1px solid #e4ebdf; }.discovery-section { padding-top:75px; }.place-gallery { grid-template-columns:1fr; }.overview-board { height:440px; }.hotspot { max-width:145px; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; font-size:12px; }.hotspot--3,.hotspot--6 { right:2%; }.gallery-title { grid-template-columns:auto 1fr; }.gallery-title button { grid-column:1/-1; }.community-banner { grid-template-columns:1fr; padding:30px; }.community-banner__art { display:none; }.community-banner > button { grid-column:auto; }.theme-tabs { justify-content:flex-start; overflow-x:auto; flex-wrap:nowrap; padding-bottom:5px; }.theme-tabs button { flex:0 0 auto; } }
 </style>
