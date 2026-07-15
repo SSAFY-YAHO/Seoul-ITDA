@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from sqlalchemy import DateTime, Integer, String, Text
+from sqlalchemy import DateTime, Float, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import Base
@@ -19,6 +19,11 @@ class Attraction(Base):
     description: Mapped[str] = mapped_column(Text, nullable=False)
     address: Mapped[str] = mapped_column(String(300), nullable=False)
     tags: Mapped[str] = mapped_column(String(500), nullable=False, default='')
+    image_url: Mapped[str] = mapped_column(String(1000), nullable=False, default='')
+    thumbnail_url: Mapped[str] = mapped_column(String(1000), nullable=False, default='')
+    telephone: Mapped[str] = mapped_column(String(200), nullable=False, default='')
+    longitude: Mapped[float | None] = mapped_column(Float, nullable=True)
+    latitude: Mapped[float | None] = mapped_column(Float, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime,

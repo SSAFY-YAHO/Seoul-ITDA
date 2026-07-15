@@ -1,29 +1,13 @@
-<script setup>
-import { useRouter } from "vue-router";
-import mascot from "../../assets/mascot.png";
-const router = useRouter();
-</script>
-
 <template>
-  <footer class="portal-footer">
-    <div class="portal-footer__links">
-      <div class="container">
-        <button type="button" @click="router.push('/')">서울 정보</button>
-        <button type="button" @click="router.push('/festivals')">축제 일정</button>
-        <button type="button" @click="router.push('/posts')">커뮤니티</button>
-        <span>데이터 출처 및 이용 안내</span>
+  <footer class="app-footer">
+    <div class="container app-footer__inner story-footer">
+      <div class="story-footer__brand">
+        <strong>Seoul ITDA</strong>
+        <p>서울의 장소와 축제, 사람의 이야기를 다정하게 잇습니다.</p>
       </div>
-    </div>
-    <div class="container portal-footer__main">
-      <div class="portal-footer__brand">
-        <img :src="mascot" alt="" />
-        <div><strong>서울잇다</strong><p>서울의 장소, 축제, 시민 경험을 한곳에서 잇는 공공정보 허브</p></div>
-      </div>
-      <div class="portal-footer__info">
-        <p>관광 데이터: 한국관광공사 TourAPI 4.0 · 커뮤니티: 익명 게시판</p>
-        <p>본 서비스는 스타트캠프 교육 목적의 MVP입니다.</p>
-        <small>© 2026 Seoul ITDA. All rights reserved.</small>
-      </div>
+      <div><b>메뉴</b><p>홈<br />축제 캘린더<br />커뮤니티</p></div>
+      <div><b>서비스</b><p>서울 명소<br />문화 행사<br />여행 후기</p></div>
+      <div><b>Contact</b><p>Seoul, Republic of Korea<br />hello@seoul-itda.kr</p></div>
     </div>
   </footer>
 </template>

@@ -1,66 +1,87 @@
 <script setup>
 import { computed, onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import mascot from "../../assets/mascot.png";
+import brandMark from "../../assets/mascot.png";
 import { fetchHealth } from "../../api/health";
 
 const route = useRoute();
 const router = useRouter();
 const healthStatus = ref("checking");
-const mobileOpen = ref(false);
+const healthEnvironment = ref("");
 
-const healthLabel = computed(() => ({ ok: "API 연결", error: "API 점검 필요", checking: "연결 확인 중" }[healthStatus.value]));
-const navItems = [
-  { label: "서울 정보", path: "/" },
-  { label: "축제 캘린더", path: "/festivals" },
-  { label: "시민 커뮤니티", path: "/posts" },
-];
+const healthLabel = computed(() => {
+  if (healthStatus.value === "ok") return "API 정상";
+  if (healthStatus.value === "error") return "API 확인 필요";
+  return "API 확인 중";
+});
 
-function active(path) {
-  return path === "/" ? route.path === "/" : route.path.startsWith(path);
+function isActive(path) {
+  return route.path === path;
 }
 
-function go(path) {
-  mobileOpen.value = false;
-  router.push(path);
-}
-
-onMounted(async () => {
+async function loadHealth() {
+  healthStatus.value = "checking";
   try {
     const data = await fetchHealth();
     healthStatus.value = data?.status === "ok" ? "ok" : "error";
-  } catch {
+    healthEnvironment.value = data?.environment || "";
+  } catch (_error) {
     healthStatus.value = "error";
+    healthEnvironment.value = "";
   }
+}
+
+onMounted(() => {
+  loadHealth();
 });
 </script>
 
 <template>
-  <header class="portal-header">
-    <div class="portal-topbar">
-      <div class="container">
-        <span>서울 공공데이터 기반 지역정보 서비스</span>
-        <div><span :class="`api-dot api-dot--${healthStatus}`"></span>{{ healthLabel }}</div>
-      </div>
-    </div>
-    <div class="container portal-brand-row">
-      <button class="portal-brand" type="button" @click="go('/')">
-        <img :src="mascot" alt="서울잇다 마스코트" />
-        <span><strong>서울잇다</strong><small>SEOUL LOCAL INFORMATION HUB</small></span>
+  <header class="app-header">
+    <div class="container app-header__inner">
+      <button class="brand" type="button" @click="router.push('/')">
+        <img class="brand__icon" :src="brandMark" alt="서울잇다 해치 아이콘" />
+        <div>
+          <strong>Seoul ITDA</strong>
+          <span>서울을 잇는 여행</span>
+        </div>
       </button>
-      <div class="portal-utilities">
-        <button type="button" @click="go('/posts/new')">경험 공유</button>
-        <button class="portal-search-shortcut" type="button" @click="go('/')">통합검색 <b>⌕</b></button>
-      </div>
-      <button class="mobile-menu" type="button" aria-label="메뉴 열기" @click="mobileOpen = !mobileOpen">☰</button>
-    </div>
-    <nav class="portal-nav" :class="{ 'portal-nav--open': mobileOpen }" aria-label="주 메뉴">
-      <div class="container">
-        <button v-for="item in navItems" :key="item.path" type="button" :class="{ active: active(item.path) }" @click="go(item.path)">
-          {{ item.label }}
+      <span class="health-chip" :class="`health-chip--${healthStatus}`">
+        {{ healthLabel }}
+        <small v-if="healthEnvironment">{{ healthEnvironment }}</small>
+      </span>
+      <nav class="nav-links" aria-label="메인 메뉴">
+        <button
+          class="nav-link"
+          type="button"
+          :class="{ 'nav-link--active': isActive('/') }"
+          @click="router.push('/')"
+        >
+          홈
         </button>
-        <span class="portal-nav__guide">로그인 없이 누구나 이용할 수 있습니다</span>
-      </div>
-    </nav>
+        <button
+          class="nav-link"
+          type="button"
+          :class="{
+            'nav-link--active':
+              isActive('/festivals') || route.path.startsWith('/festivals'),
+          }"
+          @click="router.push('/festivals')"
+        >
+          축제 캘린더
+        </button>
+        <button
+          class="nav-link"
+          type="button"
+          :class="{
+            'nav-link--active':
+              isActive('/posts') || route.path.startsWith('/posts'),
+          }"
+          @click="router.push('/posts')"
+        >
+          커뮤니티
+        </button>
+      </nav>
+    </div>
   </header>
 </template>

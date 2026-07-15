@@ -13,6 +13,11 @@ class LocationResponse(BaseModel):
     description: str
     address: str
     tags: str
+    image_url: str = ''
+    thumbnail_url: str = ''
+    telephone: str = ''
+    longitude: float | None = None
+    latitude: float | None = None
     created_at: datetime
     updated_at: datetime
 
