@@ -16,6 +16,7 @@ class PostResponse(BaseModel):
     title: str
     content: str
     views: int
+    likes: int
     created_at: datetime
     updated_at: datetime
 

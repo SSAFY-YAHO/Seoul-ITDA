@@ -44,6 +44,13 @@ def _to_date(raw_value: str | None) -> date | None:
         return None
 
 
+def _to_float(raw_value: object) -> float | None:
+    try:
+        return float(str(raw_value).strip())
+    except (TypeError, ValueError):
+        return None
+
+
 def _festival_status(start_date: date | None, end_date: date | None, today: date) -> str:
     if not start_date:
         return 'unknown'
@@ -89,6 +96,8 @@ def _normalize_festival_item(item: dict) -> dict[str, str | None]:
         'imageUrl': str(item.get('firstimage', '')).strip() or str(item.get('firstimage2', '')).strip(),
         'homepageUrl': str(item.get('homepage', '')).strip(),
         'phone': phone,
+        'longitude': _to_float(item.get('mapx')),
+        'latitude': _to_float(item.get('mapy')),
         'startDate': start_date,
         'endDate': end_date,
     }
@@ -109,6 +118,8 @@ def _fallback_from_attractions(attractions: list[Attraction]) -> list[dict[str, 
                 'imageUrl': '',
                 'homepageUrl': '',
                 'phone': '',
+                'longitude': attraction.longitude,
+                'latitude': attraction.latitude,
                 'startDate': None,
                 'endDate': None,
             }

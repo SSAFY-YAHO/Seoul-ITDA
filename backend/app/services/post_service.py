@@ -58,6 +58,16 @@ def get_post_and_increase_views(db: Session, post_id: int) -> Post | None:
     return post
 
 
+def like_post(db: Session, post_id: int) -> Post:
+    post = get_post_or_none(db, post_id)
+    if post is None:
+        raise PostNotFoundError()
+    post.likes += 1
+    db.commit()
+    db.refresh(post)
+    return post
+
+
 def update_post(db: Session, post_id: int, payload: PostUpdateRequest) -> Post:
     post = get_post_or_none(db, post_id)
     if post is None:

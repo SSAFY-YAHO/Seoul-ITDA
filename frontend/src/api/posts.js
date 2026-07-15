@@ -14,6 +14,12 @@ export async function fetchPostById(postId) {
   return request(`/api/posts/${postId}`)
 }
 
+export async function likePost(postId) {
+  return request(`/api/posts/${postId}/like`, {
+    method: 'POST',
+  })
+}
+
 export async function createPost(payload) {
   return request('/api/posts', {
     method: 'POST',

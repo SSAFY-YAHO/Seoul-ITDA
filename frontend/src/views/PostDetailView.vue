@@ -1,7 +1,7 @@
 <script setup>
 import { onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { fetchPostById, deletePost } from "../api/posts";
+import { fetchPostById, deletePost, likePost } from "../api/posts";
 
 const route = useRoute();
 const router = useRouter();
@@ -12,6 +12,13 @@ const password = ref("");
 const deleting = ref(false);
 const deleteError = ref("");
 const deleteSuccess = ref("");
+const liking = ref(false);
+const likeError = ref("");
+const hasLiked = ref(false);
+
+function likeStorageKey() {
+  return `seoul-itda-liked-post-${route.params.id}`;
+}
 
 async function loadPost() {
   loading.value = true;
@@ -19,10 +26,26 @@ async function loadPost() {
 
   try {
     post.value = await fetchPostById(route.params.id);
+    hasLiked.value = localStorage.getItem(likeStorageKey()) === "true";
   } catch (err) {
     error.value = err.message || "게시글을 불러오지 못했습니다.";
   } finally {
     loading.value = false;
+  }
+}
+
+async function handleLike() {
+  if (hasLiked.value || liking.value) return;
+  liking.value = true;
+  likeError.value = "";
+  try {
+    post.value = await likePost(route.params.id);
+    hasLiked.value = true;
+    localStorage.setItem(likeStorageKey(), "true");
+  } catch (err) {
+    likeError.value = err.message || "좋아요를 반영하지 못했습니다.";
+  } finally {
+    liking.value = false;
   }
 }
 
@@ -101,6 +124,20 @@ onMounted(() => {
             <span>조회수</span>
             <strong>{{ post.views || 0 }}</strong>
           </div>
+          <div class="post-like-row">
+            <button
+              class="post-like-button"
+              :class="{ 'post-like-button--active': hasLiked }"
+              type="button"
+              :disabled="hasLiked || liking"
+              @click="handleLike"
+            >
+              <span aria-hidden="true">{{ hasLiked ? "♥" : "♡" }}</span>
+              {{ liking ? "반영 중" : hasLiked ? "좋아요 완료" : "좋아요" }}
+              <strong>{{ post.likes || 0 }}</strong>
+            </button>
+            <p v-if="likeError" class="form-error">{{ likeError }}</p>
+          </div>
           <div v-if="post.additional_info" class="meta-row">
             <span>추가 정보</span>
             <strong>{{ post.additional_info }}</strong>
@@ -140,3 +177,12 @@ onMounted(() => {
     </section>
   </div>
 </template>
+
+<style scoped>
+.post-like-row { display:flex; align-items:center; gap:12px; margin-top:26px; padding-top:22px; border-top:1px dashed #cfdbc9; }
+.post-like-button { display:inline-flex; align-items:center; gap:8px; padding:11px 17px; border:1px solid #e3b7b2; border-radius:999px; background:#fff8f5; color:#a9514d; font-weight:850; transition:.2s ease; }
+.post-like-button:hover:not(:disabled) { transform:translateY(-2px); background:#fff0ec; box-shadow:0 8px 18px rgba(169,81,77,.12); }
+.post-like-button > span { font-size:20px; line-height:1; }.post-like-button strong { min-width:22px; padding:2px 7px; border-radius:999px; background:rgba(169,81,77,.1); text-align:center; }
+.post-like-button--active { border-color:#dca09a; background:#fde9e5; color:#a44540; }.post-like-button:disabled { cursor:default; opacity:1; }
+.post-like-row .form-error { margin:0; }
+</style>

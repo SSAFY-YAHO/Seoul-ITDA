@@ -35,10 +35,19 @@ def ensure_attraction_detail_columns() -> None:
             connection.execute(text("ALTER TABLE attractions ADD COLUMN latitude FLOAT"))
 
 
+def ensure_post_like_column() -> None:
+    """기존 SQLite 게시글 테이블에 좋아요 수 컬럼을 안전하게 추가합니다."""
+    columns = {column['name'] for column in inspect(engine).get_columns('posts')}
+    if 'likes' not in columns:
+        with engine.begin() as connection:
+            connection.execute(text("ALTER TABLE posts ADD COLUMN likes INTEGER NOT NULL DEFAULT 0"))
+
+
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     Base.metadata.create_all(bind=engine)
     ensure_attraction_detail_columns()
+    ensure_post_like_column()
 
     session = SessionLocal()
     try:

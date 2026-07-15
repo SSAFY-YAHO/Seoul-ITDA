@@ -1,5 +1,16 @@
 # Backend API Documentation
 
+## 게시글 좋아요
+
+- Method: `POST`
+- Path: `/api/posts/{post_id}/like`
+- Description: 지정한 익명 게시글의 좋아요 수를 1 증가시킵니다.
+- Request body: 없음
+- Success: `200 OK`, `PostResponse`에 `likes` 포함
+- Error: 게시글이 없으면 `404 Not Found`와 `{"detail":"Post not found"}` 반환
+
+로그인 없는 MVP이므로 API는 사용자별 중복 여부를 식별하지 않습니다. 프론트엔드는 같은 브라우저의 중복 클릭을 로컬 저장소로 제한합니다.
+
 ## 1) Create Post
 - Method: `POST`
 - Path: `/api/posts`
