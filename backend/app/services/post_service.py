@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import json
+
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
@@ -24,6 +26,7 @@ def create_post(db: Session, payload: PostCreateRequest) -> Post:
         title=payload.title,
         content=payload.content,
         edit_password=payload.edit_password,
+        images_json=json.dumps(payload.image_urls, ensure_ascii=False),
     )
     db.add(post)
     db.commit()
@@ -79,6 +82,7 @@ def update_post(db: Session, post_id: int, payload: PostUpdateRequest) -> Post:
 
     post.title = payload.title
     post.content = payload.content
+    post.images_json = json.dumps(payload.image_urls, ensure_ascii=False)
     db.commit()
     db.refresh(post)
     return post

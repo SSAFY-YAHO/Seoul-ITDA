@@ -2,6 +2,7 @@
 import { ref } from "vue";
 import { useRouter } from "vue-router";
 import { createPost } from "../api/posts";
+import PostImageUploader from "../components/community/PostImageUploader.vue";
 
 const router = useRouter();
 const title = ref("");
@@ -9,6 +10,7 @@ const content = ref("");
 const password = ref("");
 const submitting = ref(false);
 const error = ref("");
+const imageUrls = ref([]);
 
 async function submitPost() {
   if (!title.value.trim() || !content.value.trim() || !password.value.trim()) {
@@ -24,6 +26,7 @@ async function submitPost() {
       title: title.value,
       content: content.value,
       edit_password: password.value,
+      image_urls: imageUrls.value,
     });
     const postId = created?.id || created?.post_id;
     if (postId) {
@@ -90,6 +93,7 @@ async function submitPost() {
             비밀번호를 입력하세요.</small
           >
         </label>
+        <PostImageUploader v-model="imageUrls" />
         <p v-if="error" class="form-error">{{ error }}</p>
         <button
           class="btn btn--primary"

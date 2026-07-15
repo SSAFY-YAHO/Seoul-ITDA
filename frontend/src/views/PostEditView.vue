@@ -2,6 +2,7 @@
 import { computed, onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { fetchPostById, updatePost } from "../api/posts";
+import PostImageUploader from "../components/community/PostImageUploader.vue";
 
 const route = useRoute();
 const router = useRouter();
@@ -12,6 +13,7 @@ const loading = ref(true);
 const submitting = ref(false);
 const error = ref("");
 const postId = computed(() => route.params.id);
+const imageUrls = ref([]);
 
 async function loadPost() {
   loading.value = true;
@@ -21,6 +23,7 @@ async function loadPost() {
     const data = await fetchPostById(postId.value);
     title.value = data?.title || "";
     content.value = data?.content || "";
+    imageUrls.value = Array.isArray(data?.image_urls) ? data.image_urls : [];
   } catch (err) {
     error.value = err.message || "게시글 정보를 불러오지 못했습니다.";
   } finally {
@@ -42,6 +45,7 @@ async function submitEdit() {
       title: title.value,
       content: content.value,
       edit_password: password.value,
+      image_urls: imageUrls.value,
     });
     router.push(`/posts/${postId.value}`);
   } catch (err) {
@@ -108,6 +112,7 @@ onMounted(() => {
               placeholder="비밀번호를 입력하세요"
             />
           </label>
+          <PostImageUploader v-model="imageUrls" />
           <p v-if="error" class="form-error">{{ error }}</p>
           <button
             class="btn btn--primary"

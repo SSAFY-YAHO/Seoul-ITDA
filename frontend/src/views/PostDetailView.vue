@@ -119,6 +119,11 @@ onMounted(() => {
         </div>
 
         <div class="detail-card">
+          <div v-if="post.image_urls?.length" class="post-image-gallery">
+            <a v-for="(url,index) in post.image_urls" :key="url" :href="url" target="_blank" rel="noopener noreferrer">
+              <img :src="url" :alt="`게시글 첨부 사진 ${index + 1}`" loading="lazy" />
+            </a>
+          </div>
           <p>{{ post.content || "내용이 없습니다." }}</p>
           <div class="meta-row">
             <span>조회수</span>
@@ -185,4 +190,6 @@ onMounted(() => {
 .post-like-button > span { font-size:20px; line-height:1; }.post-like-button strong { min-width:22px; padding:2px 7px; border-radius:999px; background:rgba(169,81,77,.1); text-align:center; }
 .post-like-button--active { border-color:#dca09a; background:#fde9e5; color:#a44540; }.post-like-button:disabled { cursor:default; opacity:1; }
 .post-like-row .form-error { margin:0; }
+.post-image-gallery { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin-bottom:28px; }.post-image-gallery a { overflow:hidden; aspect-ratio:4/3; border-radius:15px; background:#e6ecdf; }.post-image-gallery a:first-child:nth-last-child(1) { grid-column:1/-1; aspect-ratio:16/8; }.post-image-gallery img { width:100%; height:100%; object-fit:cover; transition:transform .25s ease; }.post-image-gallery a:hover img { transform:scale(1.025); }
+@media(max-width:640px){.post-image-gallery{grid-template-columns:1fr}.post-image-gallery a:first-child:nth-last-child(1){grid-column:auto;aspect-ratio:4/3}}
 </style>

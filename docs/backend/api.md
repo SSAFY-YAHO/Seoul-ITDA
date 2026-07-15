@@ -1,5 +1,26 @@
 # Backend API Documentation
 
+## 커뮤니티 게시글 이미지
+
+- 게시글 작성·수정 요청에 `image_urls` 배열을 선택적으로 전달합니다.
+- 최대 5개이며, 생략하면 빈 배열로 처리합니다.
+- 게시글 목록·상세 응답에도 `image_urls`가 포함됩니다.
+
+```json
+{
+  "title": "서울 산책 후기",
+  "content": "사진과 함께 기록합니다.",
+  "edit_password": "demo1234",
+  "image_urls": [
+    "https://res.cloudinary.com/example/image/upload/sample-1.webp",
+    "https://res.cloudinary.com/example/image/upload/sample-2.webp"
+  ]
+}
+```
+
+- 6개 이상 전달하면 `422 Unprocessable Entity`를 반환합니다.
+- 이미지 파일은 Cloudinary에 저장하고 백엔드는 URL 배열만 SQLite에 저장합니다.
+
 ## 게시글 좋아요
 
 - Method: `POST`

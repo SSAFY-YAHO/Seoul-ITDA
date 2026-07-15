@@ -43,11 +43,20 @@ def ensure_post_like_column() -> None:
             connection.execute(text("ALTER TABLE posts ADD COLUMN likes INTEGER NOT NULL DEFAULT 0"))
 
 
+def ensure_post_image_column() -> None:
+    """기존 SQLite 게시글 테이블에 첨부 이미지 URL 컬럼을 추가합니다."""
+    columns = {column['name'] for column in inspect(engine).get_columns('posts')}
+    if 'images_json' not in columns:
+        with engine.begin() as connection:
+            connection.execute(text("ALTER TABLE posts ADD COLUMN images_json TEXT NOT NULL DEFAULT '[]'"))
+
+
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     Base.metadata.create_all(bind=engine)
     ensure_attraction_detail_columns()
     ensure_post_like_column()
+    ensure_post_image_column()
 
     session = SessionLocal()
     try:

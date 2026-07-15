@@ -9,6 +9,7 @@ class PostCreateRequest(BaseModel):
     title: str = Field(min_length=1, max_length=200)
     content: str = Field(min_length=1)
     edit_password: str = Field(min_length=1, max_length=100)
+    image_urls: list[str] = Field(default_factory=list, max_length=5)
 
 
 class PostResponse(BaseModel):
@@ -17,6 +18,7 @@ class PostResponse(BaseModel):
     content: str
     views: int
     likes: int
+    image_urls: list[str] = Field(default_factory=list)
     created_at: datetime
     updated_at: datetime
 
@@ -32,6 +34,7 @@ class PostUpdateRequest(BaseModel):
     title: str = Field(min_length=1, max_length=200)
     content: str = Field(min_length=1)
     edit_password: str | None = None
+    image_urls: list[str] = Field(default_factory=list, max_length=5)
 
 
 class PostDeleteRequest(BaseModel):

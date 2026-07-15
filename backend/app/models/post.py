@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from datetime import datetime
 
+import json
+
 from sqlalchemy import DateTime, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -17,6 +19,7 @@ class Post(Base):
     edit_password: Mapped[str] = mapped_column(String(100), nullable=False)
     views: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     likes: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    images_json: Mapped[str] = mapped_column(Text, default='[]', nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime,
@@ -24,3 +27,11 @@ class Post(Base):
         onupdate=datetime.utcnow,
         nullable=False,
     )
+
+    @property
+    def image_urls(self) -> list[str]:
+        try:
+            value = json.loads(self.images_json or '[]')
+            return value if isinstance(value, list) else []
+        except (TypeError, json.JSONDecodeError):
+            return []
