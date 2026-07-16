@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000" role="img" aria-labelledby="title desc">
   <title id="title">서울잇다 애플리케이션 아키텍처</title>
-  <desc id="desc">Vue 프레젠테이션과 API 모듈에서 FastAPI 라우터, Pydantic 스키마, 서비스, SQLAlchemy 모델과 외부 연동으로 이어지는 애플리케이션 레이어 구조</desc>
+  <desc id="desc">Vue 웹과 Capacitor 앱의 댓글·대댓글 화면에서 FastAPI 댓글 API, Pydantic 스키마, 서비스, SQLAlchemy Comment 계층으로 이어지는 애플리케이션 구조</desc>
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="#fffdf7"/>
@@ -61,7 +61,7 @@
   <rect x="281" y="370" width="155" height="43" rx="13" fill="#e9f3e2"/>
   <text class="body" x="358" y="397" text-anchor="middle">축제 캘린더</text>
   <rect x="450" y="370" width="178" height="43" rx="13" fill="#e9f3e2"/>
-  <text class="body" x="539" y="397" text-anchor="middle">커뮤니티 CRUD</text>
+  <text class="body" x="539" y="397" text-anchor="middle">댓글 · 대댓글 UI</text>
 
   <!-- frontend: components -->
   <g filter="url(#shadow)">
@@ -74,19 +74,22 @@
   <rect x="290" y="554" width="160" height="34" rx="12" fill="#f4ecd8"/>
   <text class="mini" x="370" y="576" text-anchor="middle">SeoulLocationMap</text>
   <rect x="464" y="554" width="160" height="34" rx="12" fill="#f4ecd8"/>
-  <text class="mini" x="544" y="576" text-anchor="middle">ImageUploader</text>
+  <text class="mini" x="544" y="576" text-anchor="middle">CommentThread · Uploader</text>
 
   <!-- frontend: integration -->
   <g filter="url(#shadow)">
     <rect x="88" y="640" width="565" height="178" rx="28" fill="#fff"/>
   </g>
   <text class="section" x="116" y="682">클라이언트 통합 계층</text>
-  <rect x="116" y="706" width="150" height="76" rx="16" fill="#dcebd7"/>
-  <text class="body" x="191" y="735" text-anchor="middle">Vue Router</text>
-  <text class="mini" x="191" y="760" text-anchor="middle">History SPA</text>
-  <rect x="280" y="706" width="344" height="76" rx="16" fill="#deeee8"/>
-  <text class="body" x="452" y="735" text-anchor="middle">API Modules</text>
-  <text class="mini" x="452" y="760" text-anchor="middle">chat · festivals · locations · posts · health</text>
+  <rect x="116" y="706" width="135" height="76" rx="16" fill="#dcebd7"/>
+  <text class="body" x="183" y="735" text-anchor="middle">Vue Router</text>
+  <text class="mini" x="183" y="760" text-anchor="middle">History SPA</text>
+  <rect x="263" y="706" width="145" height="76" rx="16" fill="#f4ecd8"/>
+  <text class="body" x="335" y="735" text-anchor="middle">Capacitor</text>
+  <text class="mini" x="335" y="760" text-anchor="middle">Android WebView</text>
+  <rect x="420" y="706" width="204" height="76" rx="16" fill="#deeee8"/>
+  <text class="body" x="522" y="735" text-anchor="middle">API Modules</text>
+  <text class="mini" x="522" y="760" text-anchor="middle">posts · comments · chat</text>
   <text class="small" x="116" y="806">Cloudinary 모듈은 브라우저에서 이미지를 직접 업로드합니다.</text>
 
   <!-- frontend internal flows -->
@@ -119,7 +122,7 @@
     <rect x="748" y="430" width="765" height="82" rx="24" fill="#fff8e9" stroke="#e2cf9e"/>
   </g>
   <text class="section" x="776" y="467">Pydantic 스키마</text>
-  <text class="small" x="1015" y="467">Chat · Data · Festival · Health · Location · Post</text>
+  <text class="small" x="1015" y="467">Chat · Data · Festival · Location · Post · Comment</text>
   <text class="small" x="776" y="491">Request / Response 계약과 입력값 검증</text>
 
   <!-- services -->
@@ -135,7 +138,7 @@
   <rect x="1136" y="622" width="166" height="45" rx="14" fill="#e8f2df"/>
   <text class="body" x="1219" y="650" text-anchor="middle">Festival Service</text>
   <rect x="1316" y="622" width="168" height="45" rx="14" fill="#e8f2df"/>
-  <text class="body" x="1400" y="650" text-anchor="middle">Post Service</text>
+  <text class="body" x="1400" y="650" text-anchor="middle">Post / Comment</text>
 
   <!-- persistence & externals -->
   <g filter="url(#shadow)">
@@ -143,17 +146,17 @@
   </g>
   <text class="section" x="776" y="754">데이터 접근 계층</text>
   <text class="small" x="776" y="779">SQLAlchemy Models · SessionLocal</text>
-  <rect x="776" y="794" width="190" height="24" rx="10" fill="#edf3e4"/>
-  <text class="mini" x="871" y="811" text-anchor="middle">Attraction · Post</text>
-  <rect x="980" y="794" width="210" height="24" rx="10" fill="#f4ecd8"/>
-  <text class="mini" x="1085" y="811" text-anchor="middle">SQLite localhub.db</text>
+  <rect x="776" y="794" width="250" height="24" rx="10" fill="#edf3e4"/>
+  <text class="mini" x="901" y="811" text-anchor="middle">Attraction · Post · Comment(parent)</text>
+  <rect x="1036" y="794" width="154" height="24" rx="10" fill="#f4ecd8"/>
+  <text class="mini" x="1113" y="811" text-anchor="middle">SQLite DB</text>
 
   <g filter="url(#shadow)">
     <rect x="1246" y="716" width="267" height="112" rx="28" fill="#416f5b"/>
   </g>
   <text class="section white" x="1274" y="754">외부 연동</text>
   <text class="small white" x="1274" y="781">OpenAI Chat / Responses</text>
-  <text class="small white" x="1274" y="805">서울 JSON · 웹 검색 출처</text>
+  <text class="small white" x="1274" y="805">Cloudinary · 서울 JSON · 웹 검색</text>
 
   <!-- cross-zone REST flow -->
   <path d="M653 744 C690 744 701 335 748 335" fill="none" stroke="#527d65" stroke-width="4" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
@@ -175,6 +178,13 @@
     <path d="M27 33l5 5 10-12" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
     <text class="body" x="65" y="28">챗봇 탐색 순서</text>
     <text class="small" x="65" y="49">일반 대화 → OpenAI · 장소 질문 → 내부 DB 우선 → 결과가 없을 때만 웹 검색</text>
+  </g>
+
+  <g transform="translate(280 880)">
+    <rect x="0" y="0" width="416" height="66" rx="22" fill="#fff" opacity="0.82"/>
+    <circle cx="34" cy="33" r="17" fill="#d6a862"/>
+    <text class="body" x="65" y="28">커뮤니티 댓글 규칙</text>
+    <text class="small" x="65" y="49">parent_id 대댓글(1단계) · 댓글별 좋아요</text>
   </g>
 
   <!-- decorative trees -->
