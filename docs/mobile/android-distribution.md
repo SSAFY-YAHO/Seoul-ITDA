@@ -1,5 +1,7 @@
 # Android APK 빌드 및 웹 배포
 
+현재 배포 APK 버전은 `1.1.0`(`versionCode 2`)이며 게시글 댓글 작성·조회와 댓글별 좋아요 기능을 포함한다.
+
 서울잇다 Android 앱은 기존 Vue 웹앱을 Capacitor WebView에서 실행합니다. 웹과 PWA 배포는 기존
 Netlify 설정을 그대로 사용하고, Android 프로젝트는 `frontend/android/`에서 별도로 관리합니다.
 
@@ -39,6 +41,9 @@ npm.cmd run android:apk
 완성된 APK를 `frontend/public/downloads/seoul-itda.apk`에 둔 뒤 Netlify 웹을 다시 배포합니다.
 Netlify가 이 파일을 프론트 정적 자산으로 함께 배포하며 `/download` 페이지의 버튼은 항상
 `/downloads/seoul-itda.apk`를 가리킵니다. 별도 APK 호스팅 URL이나 환경변수는 필요하지 않습니다.
+
+Android 모드 빌드는 웹 배포용 APK가 앱 내부에 다시 포함되지 않도록 `dist/downloads`를 자동으로
+제외합니다. 일반 웹 빌드는 해당 폴더를 유지하므로 Netlify 다운로드에는 영향이 없습니다.
 
 ## 업데이트
 
