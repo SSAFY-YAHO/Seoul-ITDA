@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000" role="img" aria-labelledby="title desc">
   <title id="title">서울잇다 시스템 아키텍처</title>
-  <desc id="desc">사용자 브라우저, Netlify Vue 프론트엔드, Render FastAPI 백엔드, Cloudinary, OpenAI API, SQLite와 서울 JSON 데이터의 연결 구조</desc>
+  <desc id="desc">웹과 PWA, Capacitor Android 앱, Netlify APK 배포, Render FastAPI, Cloudinary, OpenAI API, SQLite 댓글 계층과 서울 JSON 데이터의 연결 구조</desc>
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="#fbfaf3"/>
@@ -65,7 +65,7 @@
   <rect x="124" y="491" width="142" height="64" rx="12" fill="#edf3e8" stroke="#b8cdb9" stroke-width="2"/>
   <rect x="141" y="505" width="108" height="32" rx="5" fill="#fff"/>
   <text class="card-title" x="195" y="575" text-anchor="middle">사용자</text>
-  <text class="card-sub" x="195" y="598" text-anchor="middle">웹 · 모바일 브라우저</text>
+  <text class="card-sub" x="195" y="598" text-anchor="middle">웹 · PWA · Android</text>
 
   <!-- frontend deployment -->
   <g filter="url(#shadow)">
@@ -74,13 +74,13 @@
   <rect x="442" y="274" width="112" height="30" rx="15" fill="#4c7a5d"/>
   <text class="white-sub" x="498" y="295" text-anchor="middle">NETLIFY</text>
   <text class="card-title" x="442" y="348">Vue 3 SPA</text>
-  <text class="card-sub" x="442" y="374">프론트엔드 · Vite 빌드</text>
+  <text class="card-sub" x="442" y="374">Vue SPA · PWA · APK 정적 배포</text>
   <g>
     <rect x="442" y="405" width="286" height="54" rx="16" fill="#fff" opacity="0.9"/>
-    <text class="body" x="465" y="438">홈 · 축제 캘린더 · 커뮤니티</text>
+    <text class="body" x="465" y="438">홈 · 축제 · 댓글/대댓글 커뮤니티</text>
     <rect x="442" y="473" width="137" height="68" rx="16" fill="#fff" opacity="0.9"/>
-    <text class="body" x="510" y="502" text-anchor="middle">AI 챗봇</text>
-    <text class="small" x="510" y="525" text-anchor="middle">대화 UI</text>
+    <text class="body" x="510" y="502" text-anchor="middle">PWA / APK</text>
+    <text class="small" x="510" y="525" text-anchor="middle">설치 자산</text>
     <rect x="591" y="473" width="137" height="68" rx="16" fill="#fff" opacity="0.9"/>
     <text class="body" x="660" y="502" text-anchor="middle">API Client</text>
     <text class="small" x="660" y="525" text-anchor="middle">fetch / JSON</text>
@@ -95,7 +95,7 @@
   <text class="card-title" x="882" y="348">FastAPI</text>
   <text class="card-sub" x="882" y="374">백엔드 · Python REST API</text>
   <rect x="882" y="405" width="286" height="54" rx="16" fill="#fff" opacity="0.92"/>
-  <text class="body" x="1025" y="438" text-anchor="middle">/api/locations · festivals · posts</text>
+  <text class="body" x="1025" y="438" text-anchor="middle">/api/locations · festivals · posts/comments</text>
   <rect x="882" y="473" width="137" height="68" rx="16" fill="#fff" opacity="0.92"/>
   <text class="body" x="951" y="502" text-anchor="middle">Chat Service</text>
   <text class="small" x="951" y="525" text-anchor="middle">DB 우선 탐색</text>
@@ -120,7 +120,7 @@
   <path d="M1305 445v38c0 6 11 11 25 11s25-5 25-11v-38" fill="#efc77d" stroke="#d49d50" stroke-width="2"/>
   <ellipse cx="1330" cy="483" rx="25" ry="10" fill="#e2b365"/>
   <text class="card-title" x="1370" y="457">SQLite</text>
-  <text class="small" x="1310" y="520">장소 · 게시글 영속 데이터</text>
+  <text class="small" x="1310" y="520">장소 · 게시글 · 댓글/대댓글</text>
 
   <g filter="url(#shadow)">
     <rect x="1280" y="615" width="250" height="160" rx="30" fill="#f2f6e8" stroke="#c8d7a7" stroke-width="2"/>
@@ -141,6 +141,17 @@
   <text class="small" x="505" y="744">커뮤니티 이미지 직접 업로드</text>
   <text class="small" x="505" y="768">secure_url을 게시글에 저장</text>
 
+  <!-- installed android app -->
+  <g filter="url(#shadow)">
+    <rect x="70" y="655" width="250" height="125" rx="28" fill="#fff4df" stroke="#dfc58b" stroke-width="2"/>
+  </g>
+  <rect x="94" y="680" width="52" height="70" rx="12" fill="#587b62"/>
+  <rect x="101" y="690" width="38" height="48" rx="6" fill="#e7f1df"/>
+  <circle cx="120" cy="744" r="3" fill="#fff"/>
+  <text class="card-title" x="162" y="704">Android 앱</text>
+  <text class="small" x="162" y="730">Capacitor WebView</text>
+  <text class="small" x="162" y="753">공원 아이콘 · v1.1+</text>
+
   <!-- flows -->
   <path d="M320 452 C350 452 372 415 410 415" fill="none" stroke="#4f7d63" stroke-width="4" marker-end="url(#arrow)"/>
   <path d="M410 500 C372 500 350 540 320 540" fill="none" stroke="#4f7d63" stroke-width="4" marker-end="url(#arrow)"/>
@@ -149,6 +160,11 @@
 
   <path d="M760 407 H850" fill="none" stroke="#4f7d63" stroke-width="4" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
   <text class="flow" x="805" y="388" text-anchor="middle">REST · JSON</text>
+
+  <path d="M195 600V655" fill="none" stroke="#4f7d63" stroke-width="4" marker-end="url(#arrow)"/>
+  <text class="flow" x="211" y="634">설치</text>
+  <path d="M320 735 C350 825 760 835 850 575" fill="none" stroke="#4f7d63" stroke-width="4" marker-end="url(#arrow)"/>
+  <text class="flow" x="550" y="842" text-anchor="middle">HTTPS API · CORS https://localhost</text>
 
   <path d="M1200 350 C1235 350 1240 265 1280 265" fill="none" stroke="#4f7d63" stroke-width="4" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
   <text class="flow" x="1242" y="325" text-anchor="middle">AI 요청</text>

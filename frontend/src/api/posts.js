@@ -20,6 +20,23 @@ export async function likePost(postId) {
   })
 }
 
+export async function fetchComments(postId) {
+  return request(`/api/posts/${postId}/comments`)
+}
+
+export async function createComment(postId, payload) {
+  return request(`/api/posts/${postId}/comments`, {
+    method: 'POST',
+    body: payload,
+  })
+}
+
+export async function likeComment(postId, commentId) {
+  return request(`/api/posts/${postId}/comments/${commentId}/like`, {
+    method: 'POST',
+  })
+}
+
 export async function createPost(payload) {
   return request('/api/posts', {
     method: 'POST',

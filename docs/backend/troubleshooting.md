@@ -126,3 +126,13 @@
 - 원인: Capacitor WebView의 `Origin`은 `https://localhost`이며, Render CORS 허용 목록에 없으면 브라우저가 응답을 차단한다.
 - 조치: 백엔드가 `https://localhost`와 `http://localhost`를 항상 허용하도록 설정하고 Render 백엔드를 재배포한다.
 - 확인: `Origin: https://localhost` GET 응답과 OPTIONS preflight 응답에 `access-control-allow-origin` 헤더가 포함되어야 한다.
+# 댓글 API가 404를 반환하는 경우
+
+- 댓글 목록·작성에서 404가 발생하면 URL의 게시글 ID가 실제로 존재하는지 확인한다.
+- 댓글 좋아요에서 404가 발생하면 댓글이 해당 게시글에 속하는지 확인한다. 다른 게시글의 댓글 ID는 허용하지 않는다.
+- Render 배포 후 최초 시작 시 `Base.metadata.create_all()`이 `comments` 테이블을 생성했는지 로그와 DB를 확인한다.
+# 대댓글 작성이 404를 반환하는 경우
+
+- `parent_id`가 같은 게시글의 최상위 댓글 ID인지 확인한다.
+- 다른 게시글의 댓글이나 이미 대댓글인 항목을 부모로 지정하면 한 단계 구조 규칙에 따라 거부된다.
+- 기존 DB에서 오류가 나면 Render 재시작 로그에서 `parent_id` 호환 컬럼 추가가 실행됐는지 확인한다.

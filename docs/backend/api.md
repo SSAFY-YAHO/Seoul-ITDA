@@ -311,3 +311,34 @@
 # Android 앱 CORS
 
 Capacitor Android 앱은 `https://localhost` 출처에서 API를 호출한다. 모든 `/api/*` 엔드포인트는 이 출처와 `http://localhost` 호환 출처의 CORS 요청을 허용한다.
+# 댓글 API
+
+댓글은 한 단계 대댓글을 지원한다. 최상위 댓글은 `parent_id: null`, 대댓글은 부모 댓글 ID를
+`parent_id`로 반환한다.
+
+## 댓글 목록
+
+- Method: `GET`
+- Path: `/api/posts/{post_id}/comments`
+- Success: `200 OK`
+- Response: `{ "items": CommentResponse[], "total": number }`
+- Error: 게시글이 없으면 `404 Not Found`
+
+## 댓글 작성
+
+- Method: `POST`
+- Path: `/api/posts/{post_id}/comments`
+- Body: `{ "author": "닉네임", "content": "댓글 내용", "parent_id": null | number }`
+- 제한: 닉네임 1~30자, 내용 1~1,000자, 공백만 입력할 수 없음
+- Success: `201 Created`, 생성된 `CommentResponse`
+- Error: 게시글이 없으면 `404 Not Found`, 입력값이 잘못되면 `422 Unprocessable Entity`
+- Error: 부모 댓글이 없거나 다른 게시글에 속하거나 이미 대댓글이면 `404 Not Found`
+
+## 댓글 좋아요
+
+- Method: `POST`
+- Path: `/api/posts/{post_id}/comments/{comment_id}/like`
+- Success: `200 OK`, 좋아요가 증가한 `CommentResponse`
+- Error: 해당 게시글의 댓글이 없으면 `404 Not Found`
+
+`CommentResponse` 필드: `id`, `post_id`, `parent_id`, `author`, `content`, `likes`, `created_at`
