@@ -243,12 +243,101 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
   margin-top: 2rem;
 }
 .app-footer__inner { align-items: flex-start; padding-top: 1.4rem; padding-bottom: 2rem; }
-.android-download-page { display: grid; place-items: center; }
-.android-download-card { display: grid; gap: 1.4rem; width: min(100%, 760px); padding: clamp(24px, 5vw, 48px); }
-.android-download-card h1 { margin: 0.35rem 0 0.8rem; font-size: clamp(1.8rem, 4vw, 2.8rem); }
-.android-download-card .btn { justify-self: start; }
-.android-download-card__pending { padding: 0.9rem 1rem; border: 1px dashed var(--color-border); border-radius: var(--radius-md); color: var(--color-text-sub); font-weight: 700; }
-.android-install-steps { display: grid; gap: 0.7rem; margin: 0; padding-left: 1.4rem; color: var(--color-text-main); line-height: 1.65; }
+.android-download-page { display: grid; gap: var(--section-gap); }
+.android-download-hero {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-columns: minmax(0, 1.08fr) minmax(320px, 0.72fr);
+  gap: clamp(32px, 5vw, 84px);
+  align-items: center;
+  min-height: 560px;
+  padding: clamp(32px, 5vw, 72px);
+  overflow: hidden;
+  border: 1px solid rgba(122, 102, 72, 0.1);
+  border-radius: var(--radius-xl);
+  background:
+    radial-gradient(circle at 83% 17%, rgba(156, 207, 53, 0.2), transparent 28%),
+    linear-gradient(135deg, rgba(255, 253, 249, 0.99), rgba(240, 245, 224, 0.96));
+  box-shadow: var(--shadow-card);
+}
+.android-download-hero::after {
+  content: "";
+  position: absolute;
+  right: -90px;
+  bottom: -170px;
+  z-index: -1;
+  width: 520px;
+  height: 520px;
+  border: 1px solid rgba(92, 143, 39, 0.12);
+  border-radius: 50%;
+}
+.android-download-hero__copy { position: relative; z-index: 1; }
+.android-download-hero h1 {
+  max-width: 12ch;
+  margin: 0.6rem 0 1rem;
+  font-size: clamp(2.45rem, 5vw, 4.6rem);
+  line-height: 1.04;
+  letter-spacing: -0.055em;
+}
+.android-download-hero h1 em { color: #5c8f27; font-style: normal; }
+.android-download-hero__description { margin: 0; color: var(--color-text-sub); font-size: clamp(1rem, 1.5vw, 1.15rem); line-height: 1.8; }
+.android-download-hero__actions { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; margin-top: 1.8rem; }
+.android-download-button { min-height: 56px; padding-inline: 1.45rem; font-size: 1rem; }
+.android-download-button__icon { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: rgba(255,255,255,.2); font-size: 1.1rem; }
+.android-download-version { color: var(--color-text-sub); font-size: 0.88rem; font-weight: 700; }
+.android-download-benefits { display: flex; gap: 0.55rem; flex-wrap: wrap; margin: 1.4rem 0 0; padding: 0; list-style: none; }
+.android-download-benefits li { padding: 0.48rem 0.72rem; border: 1px solid rgba(92,143,39,.14); border-radius: var(--radius-pill); background: rgba(255,255,255,.68); color: #4f6641; font-size: .84rem; font-weight: 750; }
+.android-download-hero__visual { position: relative; display: grid; place-items: center; min-height: 390px; }
+.android-phone { width: min(100%, 250px); padding: 10px; border: 3px solid #315f4a; border-radius: 42px; background: #fffdf7; box-shadow: 0 30px 60px rgba(49,95,74,.18); transform: rotate(3deg); }
+.android-phone__speaker { width: 62px; height: 6px; margin: 5px auto 10px; border-radius: var(--radius-pill); background: #d7dfd2; }
+.android-phone__screen { display: grid; place-items: center; min-height: 348px; padding: 32px 20px; overflow: hidden; border-radius: 31px; background: radial-gradient(circle at 50% 30%, #fffef7, #eaf2d8); text-align: center; }
+.android-phone__screen img { width: 142px; height: 142px; object-fit: contain; filter: drop-shadow(0 14px 16px rgba(95,77,27,.12)); }
+.android-phone__screen strong { margin-top: 15px; color: #315f4a; font-size: 1.45rem; font-weight: 900; }
+.android-phone__screen small { margin-top: 3px; color: #688072; font-weight: 700; }
+.android-phone__eyebrow { margin-bottom: 8px; color: #739949; font-size: .68rem; font-weight: 900; letter-spacing: .18em; }
+.android-download-spark { position: absolute; color: #9ccf35; font-size: 2rem; }
+.android-download-spark--one { top: 28px; right: 28px; }
+.android-download-spark--two { bottom: 60px; left: 16px; font-size: 1.2rem; }
+.android-install-section { padding: clamp(28px, 4vw, 52px); border: 1px solid var(--color-border); border-radius: var(--radius-xl); background: rgba(255,253,249,.92); box-shadow: var(--shadow-soft); }
+.android-install-heading { display: flex; justify-content: space-between; align-items: end; gap: 2rem; margin-bottom: 1.7rem; }
+.android-install-heading h2 { margin: 0; font-size: clamp(1.65rem, 3vw, 2.4rem); letter-spacing: -.035em; }
+.android-install-heading > p { max-width: 390px; margin: 0; color: var(--color-text-sub); text-align: right; }
+.android-install-steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; margin: 0; padding: 0; list-style: none; }
+.android-install-steps li { display: grid; gap: 1.2rem; min-height: 205px; padding: 1.5rem; border: 1px solid rgba(122,102,72,.1); border-radius: var(--radius-lg); background: #fff; box-shadow: 0 10px 24px rgba(89,73,49,.045); }
+.android-install-steps li > span { display: grid; place-items: center; width: 46px; height: 46px; border-radius: 15px; background: #eaf3d3; color: #527d35; font-weight: 900; }
+.android-install-steps li:nth-child(2) > span { background: #dfeee8; color: #477969; }
+.android-install-steps li:nth-child(3) > span { background: #f5ead2; color: #8a6a2e; }
+.android-install-steps strong { display: block; font-size: 1.08rem; }
+.android-install-steps p { margin: .42rem 0 0; color: var(--color-text-sub); line-height: 1.65; }
+.android-security-note { display: flex; align-items: flex-start; gap: .8rem; margin-top: 1rem; padding: 1rem 1.2rem; border-radius: var(--radius-md); background: #f1f5e8; color: var(--color-text-sub); }
+.android-security-note > span { display: grid; place-items: center; flex: 0 0 auto; width: 25px; height: 25px; border-radius: 50%; background: #5c8f27; color: white; font-weight: 900; }
+.android-security-note p { margin: 0; }
+.android-security-note strong { color: var(--color-text-main); }
+@media (max-width: 920px) {
+  .android-download-hero { grid-template-columns: 1fr; min-height: 0; }
+  .android-download-hero h1 { max-width: 14ch; }
+  .android-download-hero__visual { min-height: 350px; }
+  .android-install-heading { align-items: flex-start; flex-direction: column; gap: .5rem; }
+  .android-install-heading > p { text-align: left; }
+  .android-install-steps { grid-template-columns: 1fr; }
+  .android-install-steps li { grid-template-columns: auto 1fr; min-height: 0; }
+}
+@media (max-width: 640px) {
+  .android-download-hero { padding: 28px 20px 36px; border-radius: 28px; }
+  .android-download-hero h1 { font-size: clamp(2.15rem, 12vw, 3.15rem); }
+  .android-download-hero__description br { display: none; }
+  .android-download-hero__actions { align-items: stretch; flex-direction: column; }
+  .android-download-button { width: 100%; }
+  .android-download-version { text-align: center; }
+  .android-download-hero__visual { min-height: 320px; }
+  .android-phone { width: 210px; }
+  .android-phone__screen { min-height: 294px; padding: 24px 16px; }
+  .android-phone__screen img { width: 120px; height: 120px; }
+  .android-install-section { padding: 28px 18px; border-radius: 28px; }
+  .android-install-steps li { padding: 1.2rem; border-radius: 22px; }
+  .android-security-note { font-size: .9rem; }
+}
 .app-footer p { margin: 0.35rem 0 0; color: var(--color-text-sub); }
 .footer-meta span { font-weight: 700; color: var(--color-text-main); }
 .hero-section {
@@ -851,13 +940,26 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 .home-hero .hero-copy > p { color: #52645a; font-size: 1rem; }
 .home-hero .hero-visual { position: relative; z-index: 2; min-height: 520px; }
 .home-eyebrow { color: #62816c; }
-.app-main .home-hero .btn--primary {
+.app-main .home-hero .btn--primary,
+.app-main .android-download-button {
   border: 1px solid #3f725a;
   background: #3f725a;
   color: #fff;
   box-shadow: 0 12px 26px rgba(48, 92, 67, .2);
 }
-.app-main .home-hero .btn--primary:hover { background: #315f4a; border-color: #315f4a; }
+.app-main .home-hero .btn--primary:hover,
+.app-main .android-download-button:hover {
+  background: #315f4a;
+  border-color: #315f4a;
+  box-shadow: 0 15px 30px rgba(48, 92, 67, .24);
+}
+.app-main .home-hero .btn--primary:active,
+.app-main .android-download-button:active {
+  transform: translateY(0) scale(.98);
+  background: #294f3e;
+  border-color: #294f3e;
+  box-shadow: 0 6px 14px rgba(48, 92, 67, .2);
+}
 .app-main .home-hero .btn--secondary {
   border: 1px solid rgba(63, 114, 90, .28);
   background: rgba(248, 250, 240, .94);
@@ -865,6 +967,28 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
   box-shadow: 0 9px 22px rgba(48, 81, 62, .1);
 }
 .app-main .home-hero .btn--secondary:hover { background: #edf4df; border-color: #6e987f; }
+.app-main > .android-download-page .section-label {
+  color: #6e9f28;
+}
+.app-main > .android-download-page h1,
+.app-main > .android-download-page h2 {
+  color: #26382e;
+}
+.app-main > .android-download-page .android-download-hero h1 em {
+  color: #3f725a;
+}
+.app-main > .android-download-page .android-install-steps li > span {
+  background: #eaf3d3;
+  color: #527d35;
+}
+.app-main > .android-download-page .android-install-steps li:nth-child(2) > span {
+  background: #e1eedb;
+  color: #47765d;
+}
+.app-main > .android-download-page .android-install-steps li:nth-child(3) > span {
+  background: #dcebc8;
+  color: #3f6b52;
+}
 .btn--paper { background: #fbfcf7; color: #385d49; border: 1px solid rgba(47,80,62,.14); box-shadow: 0 8px 22px rgba(48,81,62,.08); }
 .btn--paper:hover { background: white; }
 .home-about {
