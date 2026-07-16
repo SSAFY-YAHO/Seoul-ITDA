@@ -6,6 +6,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 from dataclasses import dataclass
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from sqlalchemy import or_
@@ -16,6 +17,63 @@ from app.models.post import Post
 
 
 MAX_CHAT_ANSWER_LENGTH = 800
+
+
+def _clean_web_source_url(url: str) -> str:
+    parsed = urllib.parse.urlsplit(str(url or '').strip())
+    if parsed.scheme not in {'http', 'https'} or not parsed.netloc:
+        return str(url or '').strip()
+
+    query = urllib.parse.parse_qsl(parsed.query, keep_blank_values=True)
+    clean_query = urllib.parse.urlencode(
+        [(key, value) for key, value in query if not key.lower().startswith('utm_')],
+        doseq=True,
+    )
+    return urllib.parse.urlunsplit(
+        (parsed.scheme, parsed.netloc, parsed.path, clean_query, parsed.fragment)
+    )
+
+
+def _clean_web_answer(answer: str) -> str:
+    text = str(answer or '')
+    text = re.sub(
+        r'\s*\(\s*\[[^\]\n]+\]\(\s*https?://[^)\s]+\s*\)\s*\)',
+        '',
+        text,
+        flags=re.IGNORECASE,
+    )
+    text = re.sub(
+        r'\[([^\]\n]+)\]\(\s*https?://[^)\s]+\s*\)',
+        r'\1',
+        text,
+        flags=re.IGNORECASE,
+    )
+    text = re.sub(r'https?://[^\s<>()\[\]{}]+', '', text, flags=re.IGNORECASE)
+    text = re.sub(r'【[^】]+】', '', text)
+    text = re.sub(r'(?m)^\s*(?:출처|참고(?:\s*자료)?|sources?)\s*[:：].*$', '', text, flags=re.IGNORECASE)
+    text = re.sub(
+        r'(?m)^(\s*)(?:기간\s*[·/]\s*장소|날짜\s*[·/]\s*장소|한\s*문장|설명)\s*[:：]\s*',
+        r'\1',
+        text,
+    )
+    text = re.sub(r'(?m)^\s*(?:요약|정리)\s*[:：].*$', '', text)
+    text = text.replace('위 출처', '아래 출처')
+    text = text.replace('**', '').replace('__', '').replace('`', '')
+    text = re.sub(r'(?m)^\s*#{1,6}\s*', '', text)
+    text = re.sub(r'[ \t]+(?=[,.;:!?。！？])', '', text)
+    text = re.sub(r'[ \t]+\n', '\n', text)
+    text = re.sub(r'\n{3,}', '\n\n', text)
+    return text.strip()
+
+
+def _seoul_date_context() -> str:
+    today = datetime.now(timezone(timedelta(hours=9))).date()
+    week_start = today - timedelta(days=today.weekday())
+    week_end = week_start + timedelta(days=6)
+    return (
+        f'현재 한국 날짜는 {today.isoformat()}이고, 이번 주는 '
+        f'{week_start.isoformat()}부터 {week_end.isoformat()}까지다.'
+    )
 
 
 def summarize_chat_answer(answer: str, max_length: int = MAX_CHAT_ANSWER_LENGTH) -> str:
@@ -460,7 +518,7 @@ def _extract_web_response(data: dict[str, Any]) -> tuple[str, list[ChatSource]]:
             for annotation in content_item.get('annotations', []):
                 if not isinstance(annotation, dict) or annotation.get('type') != 'url_citation':
                     continue
-                url = str(annotation.get('url', '')).strip()
+                url = _clean_web_source_url(str(annotation.get('url', '')).strip())
                 if not url or url in seen_urls:
                     continue
                 seen_urls.add(url)
@@ -472,7 +530,7 @@ def _extract_web_response(data: dict[str, Any]) -> tuple[str, list[ChatSource]]:
                     )
                 )
 
-    answer = '\n'.join(text_parts).strip()
+    answer = _clean_web_answer('\n'.join(text_parts))
     if not answer:
         raise ValueError('Empty OpenAI web search content')
     return answer, sources[:6]
@@ -489,9 +547,18 @@ def _openai_web_search(
         'model': model,
         'instructions': (
             '너는 서울잇다의 장소 탐색 도우미다. 서울잇다 내부 DB에 결과가 없어 웹 검색이 요청되었다. '
+            f'{_seoul_date_context()} '
             '서울 안의 실제 장소를 찾아 자연스러운 한국어로 답하고, 최신 정보는 공식 기관이나 장소 공식 페이지를 '
-            '우선 확인하라. 확인되지 않은 운영시간이나 가격을 단정하지 마라. 검색 내용을 그대로 나열하지 말고 '
-            '질문에 필요한 핵심 장소를 최대 5개 항목과 700자 이내로 요약하라.'
+            '우선 확인하라. 확인되지 않은 운영시간이나 가격을 단정하지 마라. '
+            '따뜻한 안내 한 문장으로 시작한 뒤 확인된 장소나 행사만 최대 5개 소개하라. '
+            '확인된 결과가 5개보다 적으면 억지로 채우거나 핵심 5곳이라고 말하지 마라. '
+            '같은 장소의 유사 프로그램은 한 항목으로 합치고, 축제 질문에는 단순 시설 개장 정보를 섞지 마라. '
+            '각 항목은 반드시 다음 예시처럼 꼬리표 없이 세 줄로 작성하라: '
+            '1. 행사명\\n7월 18일~7월 20일 · 행사 장소\\n행사의 특징을 설명하는 한 문장. '
+            '기간·장소:, 날짜·장소:, 한 문장:, 설명: 같은 필드명은 쓰지 마라. '
+            '본문에는 URL, 출처명, 마크다운 링크, 인용 표식을 절대 넣지 마라. 출처는 화면에서 별도로 제공된다. '
+            '마지막 문장은 정확한 일정은 아래 출처에서 확인해 달라는 안내로 끝내고, 그 뒤 요약이나 결론을 추가하지 마라. '
+            '전체를 650자 이내로 요약하라.'
         ),
         'input': [*history, {'role': 'user', 'content': question}],
         'tools': [{'type': 'web_search', 'search_context_size': 'low'}],

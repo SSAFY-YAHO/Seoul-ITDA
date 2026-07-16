@@ -16,6 +16,7 @@ from app.services.chat_service import (
     _extract_web_response,
     _is_place_search,
     _openai_chat_answer,
+    _openai_web_search,
     answer_chat,
     summarize_chat_answer,
 )
@@ -164,6 +165,80 @@ class ChatServiceTestCase(unittest.TestCase):
         self.assertEqual(answer, '검색 결과입니다.')
         self.assertEqual(len(sources), 1)
         self.assertEqual(sources[0].title, '서울시 공식 페이지')
+
+    def test_web_response_removes_inline_links_and_tracking_parameters(self):
+        payload = {
+            'output': [
+                {
+                    'type': 'message',
+                    'content': [
+                        {
+                            'type': 'output_text',
+                            'text': (
+                                '이번 주 서울 행사를 찾아봤어요.\n\n'
+                                '1. 식물원은 미술관\n'
+                                '기간·장소: 7월 15일~8월 17일 · 서울식물원\n'
+                                '한 문장: 식물과 미술을 함께 즐겨요. '
+                                '([서울문화포털](https://culture.seoul.go.kr/event?utm_source=openai))\n'
+                                '출처: https://culture.seoul.go.kr/event?utm_source=openai\n'
+                                '요약: 이번 주에는 서울식물원을 추천합니다.'
+                            ),
+                            'annotations': [
+                                {
+                                    'type': 'url_citation',
+                                    'title': '서울문화포털',
+                                    'url': 'https://culture.seoul.go.kr/event?id=1&utm_source=openai',
+                                },
+                            ],
+                        }
+                    ],
+                }
+            ]
+        }
+
+        answer, sources = _extract_web_response(payload)
+
+        self.assertIn('식물원은 미술관', answer)
+        self.assertNotIn('http', answer)
+        self.assertNotIn('[서울문화포털]', answer)
+        self.assertNotIn('출처:', answer)
+        self.assertNotIn('기간·장소:', answer)
+        self.assertNotIn('한 문장:', answer)
+        self.assertNotIn('요약:', answer)
+        self.assertEqual(sources[0].url, 'https://culture.seoul.go.kr/event?id=1')
+
+    def test_web_search_requests_user_facing_answer_without_inline_sources(self):
+        response_payload = {
+            'output': [
+                {
+                    'type': 'message',
+                    'content': [
+                        {
+                            'type': 'output_text',
+                            'text': '이번 주 서울 행사를 찾아봤어요.',
+                            'annotations': [],
+                        }
+                    ],
+                }
+            ]
+        }
+        with patch(
+            'app.services.chat_service._post_json',
+            return_value=response_payload,
+        ) as post_json:
+            _openai_web_search(
+                question='이번 주 서울 축제 알려줘',
+                history=[],
+                api_key='test-key',
+                model='gpt-5-mini',
+                timeout_sec=1,
+            )
+
+        instructions = post_json.call_args.args[1]['instructions']
+        self.assertIn('각 항목은 반드시 다음 예시처럼 꼬리표 없이 세 줄', instructions)
+        self.assertIn('본문에는 URL, 출처명, 마크다운 링크, 인용 표식을 절대 넣지 마라', instructions)
+        self.assertIn('그 뒤 요약이나 결론을 추가하지 마라', instructions)
+        self.assertIn('이번 주는', instructions)
 
     def test_openai_chat_omits_unsupported_temperature(self):
         with patch(
