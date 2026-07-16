@@ -12,6 +12,14 @@ from app.schemas.post import (
     PostResponse,
     PostUpdateRequest,
 )
+from app.schemas.comment import CommentCreateRequest, CommentListResponse, CommentResponse
+from app.services.comment_service import (
+    CommentNotFoundError,
+    CommentPostNotFoundError,
+    create_comment,
+    like_comment,
+    list_comments,
+)
 from app.services.post_service import (
     PasswordMismatchError,
     PasswordRequiredError,
@@ -56,6 +64,39 @@ def like_post_api(post_id: int, db: Session = Depends(get_db)):
         return like_post(db, post_id)
     except PostNotFoundError:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Post not found') from None
+
+
+@router.get('/{post_id}/comments', response_model=CommentListResponse)
+def list_comments_api(post_id: int, db: Session = Depends(get_db)):
+    try:
+        comments = list_comments(db, post_id)
+        return CommentListResponse(items=comments, total=len(comments))
+    except CommentPostNotFoundError:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Post not found') from None
+
+
+@router.post(
+    '/{post_id}/comments',
+    response_model=CommentResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+def create_comment_api(
+    post_id: int,
+    payload: CommentCreateRequest,
+    db: Session = Depends(get_db),
+):
+    try:
+        return create_comment(db, post_id, payload)
+    except CommentPostNotFoundError:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Post not found') from None
+
+
+@router.post('/{post_id}/comments/{comment_id}/like', response_model=CommentResponse)
+def like_comment_api(post_id: int, comment_id: int, db: Session = Depends(get_db)):
+    try:
+        return like_comment(db, post_id, comment_id)
+    except CommentNotFoundError:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Comment not found') from None
 
 
 @router.put('/{post_id}', response_model=PostResponse)

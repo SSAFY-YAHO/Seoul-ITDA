@@ -6,6 +6,7 @@ from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.models.post import Post
+from app.models.comment import Comment
 from app.schemas.post import PostCreateRequest, PostUpdateRequest
 
 
@@ -97,5 +98,6 @@ def delete_post(db: Session, post_id: int, edit_password: str | None) -> None:
     if edit_password != post.edit_password:
         raise PasswordMismatchError()
 
+    db.query(Comment).filter(Comment.post_id == post_id).delete(synchronize_session=False)
     db.delete(post)
     db.commit()
