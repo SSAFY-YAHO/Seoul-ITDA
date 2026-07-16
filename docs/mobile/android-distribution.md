@@ -1,6 +1,6 @@
 # Android APK 빌드 및 웹 배포
 
-현재 배포 APK 버전은 `1.2.1`(`versionCode 4`)이며 게시글 댓글·대댓글 작성/조회, 댓글별 좋아요와 서울잇다 공식 앱 아이콘을 포함한다.
+현재 배포 APK 버전은 `1.2.2`(`versionCode 5`)이며 게시글 댓글·대댓글 작성/조회, 댓글별 좋아요, 서울잇다 공식 앱 아이콘과 최신 다운로드 화면을 포함한다.
 
 서울잇다 Android 앱은 기존 Vue 웹앱을 Capacitor WebView에서 실행합니다. 웹과 PWA 배포는 기존
 Netlify 설정을 그대로 사용하고, Android 프로젝트는 `frontend/android/`에서 별도로 관리합니다.
