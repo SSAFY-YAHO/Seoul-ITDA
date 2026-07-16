@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import {
   createComment,
@@ -29,6 +29,12 @@ const commentAuthor = ref("");
 const commentContent = ref("");
 const commentSubmitting = ref(false);
 const likingCommentId = ref(null);
+const replyToCommentId = ref(null);
+const replyAuthor = ref("");
+const replyContent = ref("");
+const replySubmitting = ref(false);
+
+const topLevelComments = computed(() => comments.value.filter((comment) => !comment.parent_id));
 
 function likeStorageKey() {
   return `seoul-itda-liked-post-${route.params.id}`;
@@ -46,6 +52,22 @@ function formatCommentDate(value) {
   if (!value) return "작성일 없음";
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? value : date.toLocaleString("ko-KR");
+}
+
+function repliesFor(commentId) {
+  return comments.value.filter((comment) => comment.parent_id === commentId);
+}
+
+function startReply(comment) {
+  replyToCommentId.value = comment.id;
+  replyAuthor.value = commentAuthor.value.trim();
+  replyContent.value = "";
+  commentError.value = "";
+}
+
+function cancelReply() {
+  replyToCommentId.value = null;
+  replyContent.value = "";
 }
 
 async function loadComments() {
@@ -94,6 +116,32 @@ async function handleCreateComment() {
     commentError.value = err.message || "댓글을 등록하지 못했습니다.";
   } finally {
     commentSubmitting.value = false;
+  }
+}
+
+async function handleCreateReply(parentId) {
+  const author = replyAuthor.value.trim();
+  const content = replyContent.value.trim();
+  if (!author || !content) {
+    commentError.value = "닉네임과 답글 내용을 모두 입력해주세요.";
+    return;
+  }
+
+  replySubmitting.value = true;
+  commentError.value = "";
+  try {
+    const created = await createComment(route.params.id, {
+      author,
+      content,
+      parent_id: parentId,
+    });
+    comments.value.push(created);
+    replyToCommentId.value = null;
+    replyContent.value = "";
+  } catch (err) {
+    commentError.value = err.message || "답글을 등록하지 못했습니다.";
+  } finally {
+    replySubmitting.value = false;
   }
 }
 
@@ -260,21 +308,61 @@ onMounted(() => {
           <div v-if="commentsLoading" class="loading-state">댓글을 불러오는 중입니다.</div>
           <div v-else-if="comments.length === 0" class="empty-state">첫 댓글을 남겨보세요.</div>
           <ul v-else class="comment-list">
-            <li v-for="comment in comments" :key="comment.id" class="comment-item">
-              <div class="comment-item__meta">
-                <strong>{{ comment.author }}</strong>
-                <time :datetime="comment.created_at">{{ formatCommentDate(comment.created_at) }}</time>
-              </div>
-              <p>{{ comment.content }}</p>
-              <button
-                class="comment-like-button"
-                :class="{ 'comment-like-button--active': hasLikedComment(comment.id) }"
-                type="button"
-                :disabled="hasLikedComment(comment.id) || likingCommentId !== null"
-                @click="handleCommentLike(comment)"
+            <li v-for="comment in topLevelComments" :key="comment.id" class="comment-thread">
+              <article class="comment-item">
+                <div class="comment-item__meta">
+                  <strong>{{ comment.author }}</strong>
+                  <time :datetime="comment.created_at">{{ formatCommentDate(comment.created_at) }}</time>
+                </div>
+                <p>{{ comment.content }}</p>
+                <div class="comment-item__actions">
+                  <button
+                    class="comment-like-button"
+                    :class="{ 'comment-like-button--active': hasLikedComment(comment.id) }"
+                    type="button"
+                    :disabled="hasLikedComment(comment.id) || likingCommentId !== null"
+                    @click="handleCommentLike(comment)"
+                  >
+                    {{ hasLikedComment(comment.id) ? "♥" : "♡" }} 좋아요 {{ comment.likes || 0 }}
+                  </button>
+                  <button class="comment-reply-button" type="button" @click="startReply(comment)">↳ 답글</button>
+                </div>
+              </article>
+
+              <form
+                v-if="replyToCommentId === comment.id"
+                class="reply-form"
+                @submit.prevent="handleCreateReply(comment.id)"
               >
-                {{ hasLikedComment(comment.id) ? "♥" : "♡" }} 좋아요 {{ comment.likes || 0 }}
-              </button>
+                <strong>{{ comment.author }}님에게 답글</strong>
+                <input v-model="replyAuthor" class="input" maxlength="30" placeholder="닉네임" />
+                <textarea v-model="replyContent" class="textarea textarea--compact" maxlength="1000" placeholder="답글을 입력하세요"></textarea>
+                <div class="reply-form__actions">
+                  <button class="btn btn--ghost btn--small" type="button" @click="cancelReply">취소</button>
+                  <button class="btn btn--primary btn--small" type="submit" :disabled="replySubmitting">
+                    {{ replySubmitting ? "등록 중..." : "답글 등록" }}
+                  </button>
+                </div>
+              </form>
+
+              <ul v-if="repliesFor(comment.id).length" class="reply-list">
+                <li v-for="reply in repliesFor(comment.id)" :key="reply.id" class="comment-item comment-item--reply">
+                  <div class="comment-item__meta">
+                    <strong>↳ {{ reply.author }}</strong>
+                    <time :datetime="reply.created_at">{{ formatCommentDate(reply.created_at) }}</time>
+                  </div>
+                  <p>{{ reply.content }}</p>
+                  <button
+                    class="comment-like-button"
+                    :class="{ 'comment-like-button--active': hasLikedComment(reply.id) }"
+                    type="button"
+                    :disabled="hasLikedComment(reply.id) || likingCommentId !== null"
+                    @click="handleCommentLike(reply)"
+                  >
+                    {{ hasLikedComment(reply.id) ? "♥" : "♡" }} 좋아요 {{ reply.likes || 0 }}
+                  </button>
+                </li>
+              </ul>
             </li>
           </ul>
         </section>
@@ -327,10 +415,17 @@ onMounted(() => {
 .comment-form { display:grid; gap:14px; padding:18px; border-radius:15px; background:#f4f7ed; }
 .comment-form__footer small { color:var(--color-text-sub); }
 .comment-list { display:grid; gap:12px; margin:0; padding:0; list-style:none; }
+.comment-thread { display:grid; gap:10px; }
 .comment-item { display:grid; gap:10px; padding:18px; border:1px solid #e0e7dc; border-radius:15px; background:white; }
 .comment-item__meta strong { color:#315640; }.comment-item__meta time { color:var(--color-text-sub); font-size:.78rem; }
 .comment-item p { margin:0; color:var(--color-text-main); line-height:1.65; white-space:pre-wrap; overflow-wrap:anywhere; }
 .comment-like-button { justify-self:start; padding:7px 11px; border-radius:999px; background:#fff5f2; color:#a9514d; font-size:.78rem; font-weight:800; }
 .comment-like-button:hover:not(:disabled) { background:#fde8e3; }.comment-like-button--active { background:#fde8e3; }.comment-like-button:disabled { cursor:default; opacity:1; }
+.comment-item__actions,.reply-form__actions { display:flex; align-items:center; gap:8px; }
+.comment-reply-button { padding:7px 11px; border-radius:999px; background:#eef4e9; color:#456650; font-size:.78rem; font-weight:800; }
+.reply-form { display:grid; gap:10px; margin-left:28px; padding:16px; border-left:3px solid #9bb594; border-radius:0 14px 14px 0; background:#f4f7ed; }
+.reply-form > strong { color:#456650; font-size:.82rem; }.reply-form__actions { justify-content:flex-end; }
+.reply-list { display:grid; gap:9px; margin:0 0 0 28px; padding:0; list-style:none; }
+.comment-item--reply { border-left:3px solid #a9bfa3; background:#f9fbf5; }
 @media(max-width:640px){.post-image-gallery{grid-template-columns:1fr}.post-image-gallery a:first-child:nth-last-child(1){grid-column:auto;aspect-ratio:4/3}}
 </style>
