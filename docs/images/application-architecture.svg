@@ -1,0 +1,188 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000" role="img" aria-labelledby="title desc">
+  <title id="title">서울잇다 애플리케이션 아키텍처</title>
+  <desc id="desc">Vue 프레젠테이션과 API 모듈에서 FastAPI 라우터, Pydantic 스키마, 서비스, SQLAlchemy 모델과 외부 연동으로 이어지는 애플리케이션 레이어 구조</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fffdf7"/>
+      <stop offset="1" stop-color="#edf5ea"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#315444" flood-opacity="0.11"/>
+    </filter>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0 0L10 5L0 10z" fill="#527d65"/>
+    </marker>
+    <marker id="arrow-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0 0L10 5L0 10z" fill="#5d8da1"/>
+    </marker>
+    <style>
+      .title { font:800 42px 'Pretendard','Noto Sans KR',Arial,sans-serif; fill:#294c3a; }
+      .subtitle { font:500 18px 'Pretendard','Noto Sans KR',Arial,sans-serif; fill:#718078; }
+      .eyebrow { font:800 14px 'Pretendard','Noto Sans KR',Arial,sans-serif; letter-spacing:2px; fill:#6a8d72; }
+      .zone { font:800 14px 'Pretendard','Noto Sans KR',Arial,sans-serif; letter-spacing:1.1px; }
+      .section { font:800 24px 'Pretendard','Noto Sans KR',Arial,sans-serif; fill:#294c3a; }
+      .body { font:700 15px 'Pretendard','Noto Sans KR',Arial,sans-serif; fill:#40584b; }
+      .small { font:600 13px 'Pretendard','Noto Sans KR',Arial,sans-serif; fill:#66796e; }
+      .mini { font:700 12px 'Pretendard','Noto Sans KR',Arial,sans-serif; fill:#65766c; }
+      .flow { font:800 13px 'Pretendard','Noto Sans KR',Arial,sans-serif; fill:#527d65; }
+      .white { fill:#fff; }
+    </style>
+  </defs>
+
+  <rect width="1600" height="1000" fill="url(#bg)"/>
+  <circle cx="1490" cy="100" r="170" fill="#f3d890" opacity="0.18"/>
+  <circle cx="110" cy="930" r="180" fill="#a9d3c1" opacity="0.18"/>
+  <path d="M0 940 C210 895 335 975 535 930 S900 900 1100 945 1420 972 1600 925 V1000H0Z" fill="#d8e9d2"/>
+
+  <g transform="translate(68 54)">
+    <text class="eyebrow" x="0" y="0">SEOUL ITDA · APPLICATION VIEW</text>
+    <text class="title" x="0" y="58">서울잇다 애플리케이션 아키텍처</text>
+    <text class="subtitle" x="0" y="92">화면에서 API, 비즈니스 로직, 데이터 계층으로 이어지는 코드 구조와 책임을 표현합니다.</text>
+  </g>
+
+  <!-- zone backgrounds -->
+  <rect x="55" y="180" width="630" height="690" rx="42" fill="#f1f7eb" stroke="#c4d9ba" stroke-width="2"/>
+  <rect x="715" y="180" width="830" height="690" rx="42" fill="#edf5f1" stroke="#b8d2c8" stroke-width="2"/>
+  <rect x="84" y="205" width="190" height="34" rx="17" fill="#598164"/>
+  <text class="zone white" x="179" y="228" text-anchor="middle">FRONTEND · VUE 3</text>
+  <rect x="744" y="205" width="205" height="34" rx="17" fill="#397469"/>
+  <text class="zone white" x="846" y="228" text-anchor="middle">BACKEND · FASTAPI</text>
+
+  <!-- frontend: views -->
+  <g filter="url(#shadow)">
+    <rect x="88" y="270" width="565" height="165" rx="28" fill="#fff"/>
+  </g>
+  <circle cx="128" cy="310" r="19" fill="#91b786"/>
+  <path d="M118 310h20M128 300v20" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+  <text class="section" x="160" y="318">프레젠테이션 계층</text>
+  <text class="small" x="160" y="344">라우트별 화면과 재사용 UI 컴포넌트</text>
+  <rect x="112" y="370" width="155" height="43" rx="13" fill="#e9f3e2"/>
+  <text class="body" x="189" y="397" text-anchor="middle">홈 · 장소 지도</text>
+  <rect x="281" y="370" width="155" height="43" rx="13" fill="#e9f3e2"/>
+  <text class="body" x="358" y="397" text-anchor="middle">축제 캘린더</text>
+  <rect x="450" y="370" width="178" height="43" rx="13" fill="#e9f3e2"/>
+  <text class="body" x="539" y="397" text-anchor="middle">커뮤니티 CRUD</text>
+
+  <!-- frontend: components -->
+  <g filter="url(#shadow)">
+    <rect x="88" y="465" width="565" height="145" rx="28" fill="#fff"/>
+  </g>
+  <text class="section" x="116" y="507">공통 컴포넌트</text>
+  <text class="small" x="116" y="533">AppHeader · AppFooter · ChatbotWidget</text>
+  <rect x="116" y="554" width="160" height="34" rx="12" fill="#f4ecd8"/>
+  <text class="mini" x="196" y="576" text-anchor="middle">FestivalCalendar</text>
+  <rect x="290" y="554" width="160" height="34" rx="12" fill="#f4ecd8"/>
+  <text class="mini" x="370" y="576" text-anchor="middle">SeoulLocationMap</text>
+  <rect x="464" y="554" width="160" height="34" rx="12" fill="#f4ecd8"/>
+  <text class="mini" x="544" y="576" text-anchor="middle">ImageUploader</text>
+
+  <!-- frontend: integration -->
+  <g filter="url(#shadow)">
+    <rect x="88" y="640" width="565" height="178" rx="28" fill="#fff"/>
+  </g>
+  <text class="section" x="116" y="682">클라이언트 통합 계층</text>
+  <rect x="116" y="706" width="150" height="76" rx="16" fill="#dcebd7"/>
+  <text class="body" x="191" y="735" text-anchor="middle">Vue Router</text>
+  <text class="mini" x="191" y="760" text-anchor="middle">History SPA</text>
+  <rect x="280" y="706" width="344" height="76" rx="16" fill="#deeee8"/>
+  <text class="body" x="452" y="735" text-anchor="middle">API Modules</text>
+  <text class="mini" x="452" y="760" text-anchor="middle">chat · festivals · locations · posts · health</text>
+  <text class="small" x="116" y="806">Cloudinary 모듈은 브라우저에서 이미지를 직접 업로드합니다.</text>
+
+  <!-- frontend internal flows -->
+  <path d="M370 435V465" stroke="#527d65" stroke-width="3" marker-end="url(#arrow)"/>
+  <path d="M370 610V640" stroke="#527d65" stroke-width="3" marker-end="url(#arrow)"/>
+
+  <!-- backend routers -->
+  <g filter="url(#shadow)">
+    <rect x="748" y="270" width="765" height="135" rx="28" fill="#fff"/>
+  </g>
+  <text class="section" x="776" y="309">API 라우팅 계층</text>
+  <text class="small" x="776" y="334">요청 검증 · HTTP 응답 · DB 세션 주입</text>
+  <g>
+    <rect x="776" y="353" width="108" height="32" rx="11" fill="#dceee7"/>
+    <text class="mini" x="830" y="374" text-anchor="middle">/health</text>
+    <rect x="894" y="353" width="108" height="32" rx="11" fill="#dceee7"/>
+    <text class="mini" x="948" y="374" text-anchor="middle">/locations</text>
+    <rect x="1012" y="353" width="108" height="32" rx="11" fill="#dceee7"/>
+    <text class="mini" x="1066" y="374" text-anchor="middle">/festivals</text>
+    <rect x="1130" y="353" width="108" height="32" rx="11" fill="#dceee7"/>
+    <text class="mini" x="1184" y="374" text-anchor="middle">/posts</text>
+    <rect x="1248" y="353" width="108" height="32" rx="11" fill="#dceee7"/>
+    <text class="mini" x="1302" y="374" text-anchor="middle">/data</text>
+    <rect x="1366" y="353" width="118" height="32" rx="11" fill="#cfe5dc"/>
+    <text class="mini" x="1425" y="374" text-anchor="middle">/chat</text>
+  </g>
+
+  <!-- schemas -->
+  <g filter="url(#shadow)">
+    <rect x="748" y="430" width="765" height="82" rx="24" fill="#fff8e9" stroke="#e2cf9e"/>
+  </g>
+  <text class="section" x="776" y="467">Pydantic 스키마</text>
+  <text class="small" x="1015" y="467">Chat · Data · Festival · Health · Location · Post</text>
+  <text class="small" x="776" y="491">Request / Response 계약과 입력값 검증</text>
+
+  <!-- services -->
+  <g filter="url(#shadow)">
+    <rect x="748" y="538" width="765" height="152" rx="28" fill="#fff"/>
+  </g>
+  <text class="section" x="776" y="578">서비스 계층</text>
+  <text class="small" x="776" y="602">비즈니스 규칙과 데이터 조합을 라우터에서 분리</text>
+  <rect x="776" y="622" width="166" height="45" rx="14" fill="#dceee7"/>
+  <text class="body" x="859" y="650" text-anchor="middle">Chat Service</text>
+  <rect x="956" y="622" width="166" height="45" rx="14" fill="#e8f2df"/>
+  <text class="body" x="1039" y="650" text-anchor="middle">Data Service</text>
+  <rect x="1136" y="622" width="166" height="45" rx="14" fill="#e8f2df"/>
+  <text class="body" x="1219" y="650" text-anchor="middle">Festival Service</text>
+  <rect x="1316" y="622" width="168" height="45" rx="14" fill="#e8f2df"/>
+  <text class="body" x="1400" y="650" text-anchor="middle">Post Service</text>
+
+  <!-- persistence & externals -->
+  <g filter="url(#shadow)">
+    <rect x="748" y="716" width="472" height="112" rx="28" fill="#fff"/>
+  </g>
+  <text class="section" x="776" y="754">데이터 접근 계층</text>
+  <text class="small" x="776" y="779">SQLAlchemy Models · SessionLocal</text>
+  <rect x="776" y="794" width="190" height="24" rx="10" fill="#edf3e4"/>
+  <text class="mini" x="871" y="811" text-anchor="middle">Attraction · Post</text>
+  <rect x="980" y="794" width="210" height="24" rx="10" fill="#f4ecd8"/>
+  <text class="mini" x="1085" y="811" text-anchor="middle">SQLite localhub.db</text>
+
+  <g filter="url(#shadow)">
+    <rect x="1246" y="716" width="267" height="112" rx="28" fill="#416f5b"/>
+  </g>
+  <text class="section white" x="1274" y="754">외부 연동</text>
+  <text class="small white" x="1274" y="781">OpenAI Chat / Responses</text>
+  <text class="small white" x="1274" y="805">서울 JSON · 웹 검색 출처</text>
+
+  <!-- cross-zone REST flow -->
+  <path d="M653 744 C690 744 701 335 748 335" fill="none" stroke="#527d65" stroke-width="4" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
+  <rect x="659" y="502" width="86" height="52" rx="15" fill="#fff" stroke="#c8d8cc"/>
+  <text class="flow" x="702" y="523" text-anchor="middle">REST</text>
+  <text class="mini" x="702" y="544" text-anchor="middle">JSON</text>
+
+  <!-- backend vertical flows -->
+  <path d="M1130 405V430" stroke="#527d65" stroke-width="3" marker-end="url(#arrow)"/>
+  <path d="M1130 512V538" stroke="#527d65" stroke-width="3" marker-end="url(#arrow)"/>
+  <path d="M1010 690V716" stroke="#527d65" stroke-width="3" marker-end="url(#arrow)"/>
+  <path d="M1400 690V716" stroke="#5d8da1" stroke-width="3" marker-end="url(#arrow-blue)"/>
+  <path d="M1220 772H1246" stroke="#5d8da1" stroke-width="3" stroke-dasharray="7 6" marker-end="url(#arrow-blue)"/>
+
+  <!-- chat decision note -->
+  <g transform="translate(760 880)">
+    <rect x="0" y="0" width="760" height="66" rx="22" fill="#fff" opacity="0.82"/>
+    <circle cx="34" cy="33" r="17" fill="#6e9b79"/>
+    <path d="M27 33l5 5 10-12" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <text class="body" x="65" y="28">챗봇 탐색 순서</text>
+    <text class="small" x="65" y="49">일반 대화 → OpenAI · 장소 질문 → 내부 DB 우선 → 결과가 없을 때만 웹 검색</text>
+  </g>
+
+  <!-- decorative trees -->
+  <g transform="translate(70 865)">
+    <rect x="21" y="48" width="10" height="38" rx="4" fill="#9c7447"/>
+    <circle cx="26" cy="30" r="26" fill="#7aa17a"/>
+    <circle cx="46" cy="43" r="20" fill="#9bb992"/>
+    <rect x="112" y="54" width="9" height="32" rx="4" fill="#9c7447"/>
+    <path d="M116 8L84 67h64z" fill="#5e8f67"/>
+  </g>
+</svg>
