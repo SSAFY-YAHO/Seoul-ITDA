@@ -16,6 +16,7 @@ from app.schemas.comment import CommentCreateRequest, CommentListResponse, Comme
 from app.services.comment_service import (
     CommentNotFoundError,
     CommentPostNotFoundError,
+    ParentCommentNotFoundError,
     create_comment,
     like_comment,
     list_comments,
@@ -89,6 +90,8 @@ def create_comment_api(
         return create_comment(db, post_id, payload)
     except CommentPostNotFoundError:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Post not found') from None
+    except ParentCommentNotFoundError:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Parent comment not found') from None
 
 
 @router.post('/{post_id}/comments/{comment_id}/like', response_model=CommentResponse)

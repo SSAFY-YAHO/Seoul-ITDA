@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
 from app.database import Base, SessionLocal, engine
-from app.models import Attraction, Post
+from app.models import Attraction, Comment, Post
 from app.routers.chat import router as chat_router
 from app.routers.data import router as data_router
 from app.routers.festivals import router as festivals_router
@@ -51,12 +51,24 @@ def ensure_post_image_column() -> None:
             connection.execute(text("ALTER TABLE posts ADD COLUMN images_json TEXT NOT NULL DEFAULT '[]'"))
 
 
+def ensure_comment_parent_column() -> None:
+    """기존 SQLite 댓글 테이블에 대댓글 부모 컬럼을 추가한다."""
+    inspector = inspect(engine)
+    if 'comments' not in inspector.get_table_names():
+        return
+    columns = {column['name'] for column in inspector.get_columns('comments')}
+    if 'parent_id' not in columns:
+        with engine.begin() as connection:
+            connection.execute(text('ALTER TABLE comments ADD COLUMN parent_id INTEGER'))
+
+
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     Base.metadata.create_all(bind=engine)
     ensure_attraction_detail_columns()
     ensure_post_like_column()
     ensure_post_image_column()
+    ensure_comment_parent_column()
 
     session = SessionLocal()
     try:

@@ -11,6 +11,7 @@ from app.schemas.comment import CommentCreateRequest
 from app.services.comment_service import (
     CommentNotFoundError,
     CommentPostNotFoundError,
+    ParentCommentNotFoundError,
     create_comment,
     like_comment,
     list_comments,
@@ -63,6 +64,41 @@ class CommentServiceTestCase(unittest.TestCase):
     def test_like_missing_comment_fails(self):
         with self.assertRaises(CommentNotFoundError):
             like_comment(self.db, self.post.id, 999)
+
+    def test_create_reply_for_top_level_comment(self):
+        parent = create_comment(
+            self.db,
+            self.post.id,
+            CommentCreateRequest(author='여행자', content='부모 댓글'),
+        )
+
+        reply = create_comment(
+            self.db,
+            self.post.id,
+            CommentCreateRequest(author='서울친구', content='대댓글', parent_id=parent.id),
+        )
+
+        self.assertEqual(reply.parent_id, parent.id)
+        self.assertEqual(list_comments(self.db, self.post.id)[1].content, '대댓글')
+
+    def test_reply_parent_must_be_top_level_comment_in_same_post(self):
+        parent = create_comment(
+            self.db,
+            self.post.id,
+            CommentCreateRequest(author='여행자', content='부모 댓글'),
+        )
+        reply = create_comment(
+            self.db,
+            self.post.id,
+            CommentCreateRequest(author='서울친구', content='대댓글', parent_id=parent.id),
+        )
+
+        with self.assertRaises(ParentCommentNotFoundError):
+            create_comment(
+                self.db,
+                self.post.id,
+                CommentCreateRequest(author='세 번째', content='3단 댓글', parent_id=reply.id),
+            )
 
 
 if __name__ == '__main__':

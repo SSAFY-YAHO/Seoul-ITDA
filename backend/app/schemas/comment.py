@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field, field_validator
 class CommentCreateRequest(BaseModel):
     author: str = Field(min_length=1, max_length=30)
     content: str = Field(min_length=1, max_length=1000)
+    parent_id: int | None = Field(default=None, ge=1)
 
     @field_validator('author', 'content')
     @classmethod
@@ -21,6 +22,7 @@ class CommentCreateRequest(BaseModel):
 class CommentResponse(BaseModel):
     id: int
     post_id: int
+    parent_id: int | None
     author: str
     content: str
     likes: int
@@ -32,4 +34,3 @@ class CommentResponse(BaseModel):
 class CommentListResponse(BaseModel):
     items: list[CommentResponse]
     total: int
-
