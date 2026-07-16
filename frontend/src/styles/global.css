@@ -222,6 +222,21 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 .nav-link:hover::after,
 .nav-link--active::after { left: 0; right: 0; }
 .nav-link--active { background: transparent; color: #35664f; border: 0; }
+.nav-link--install {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.28rem;
+  padding: 0.48rem 0.78rem;
+  border: 1px solid rgba(63, 118, 90, 0.3);
+  border-radius: var(--radius-pill);
+  background: #edf5e9;
+  color: #35664f;
+  font-size: 0.84rem;
+  white-space: nowrap;
+}
+.nav-link--install::after { display: none; }
+.nav-link--install:hover { background: #deedda; box-shadow: 0 5px 14px rgba(53, 102, 79, 0.12); }
+.nav-link--install span { font-size: 1rem; line-height: 1; }
 .app-footer {
   background: rgba(255, 252, 246, 0.72);
   border-top: 1px solid var(--color-border);

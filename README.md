@@ -59,6 +59,20 @@ searches use the local attraction/community database first. Only when no local m
 `CHAT_WEB_SEARCH_ENABLED=true` does the backend call the OpenAI Responses API web search tool. Configure the
 search-capable model separately with `OPENAI_WEB_SEARCH_MODEL`.
 
+## PWA 설치
+
+프로덕션 빌드는 웹 앱 매니페스트와 서비스 워커를 포함하며, HTTPS로 배포하면 홈 화면이나 데스크톱에
+`서울잇다` 앱으로 설치할 수 있습니다.
+
+- Chrome·Edge 등 Chromium 브라우저에서는 설치 조건을 만족하면 헤더에 `앱 설치` 버튼이 표시됩니다.
+- iPhone·iPad에서는 브라우저 공유 메뉴의 `홈 화면에 추가`를 사용합니다.
+- 설치 후에는 주소 표시줄이 없는 독립 창으로 실행됩니다.
+- 한 번 불러온 정적 화면은 기본 캐시에 저장되며, 네트워크 연결이 없으면 오프라인 안내 화면을 제공합니다.
+- 서비스 워커는 캐시 혼선을 피하기 위해 `npm run dev`에서는 등록하지 않고 프로덕션 빌드에서만 등록합니다.
+
+PWA 주요 파일은 `frontend/public/manifest.webmanifest`, `frontend/public/sw.js`,
+`frontend/public/icons/`에 있습니다.
+
 ## 기본 엔드포인트
 
 - `GET /` : 앱 메타 정보

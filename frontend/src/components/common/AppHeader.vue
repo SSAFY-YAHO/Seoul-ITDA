@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, ref } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import brandMark from "../../assets/mascot.png";
 import { fetchHealth } from "../../api/health";
@@ -8,12 +8,16 @@ const route = useRoute();
 const router = useRouter();
 const healthStatus = ref("checking");
 const healthEnvironment = ref("");
+const installPrompt = ref(null);
+const isInstalled = ref(false);
 
 const healthLabel = computed(() => {
   if (healthStatus.value === "ok") return "API 정상";
   if (healthStatus.value === "error") return "API 확인 필요";
   return "API 확인 중";
 });
+
+const canInstall = computed(() => Boolean(installPrompt.value) && !isInstalled.value);
 
 function isActive(path) {
   return route.path === path;
@@ -31,8 +35,39 @@ async function loadHealth() {
   }
 }
 
+function updateInstalledState() {
+  isInstalled.value = window.matchMedia("(display-mode: standalone)").matches
+    || window.navigator.standalone === true;
+}
+
+function handleInstallPrompt(event) {
+  event.preventDefault();
+  installPrompt.value = event;
+}
+
+function handleAppInstalled() {
+  installPrompt.value = null;
+  isInstalled.value = true;
+}
+
+async function installApp() {
+  if (!installPrompt.value) return;
+  const promptEvent = installPrompt.value;
+  installPrompt.value = null;
+  await promptEvent.prompt();
+  await promptEvent.userChoice;
+}
+
 onMounted(() => {
   loadHealth();
+  updateInstalledState();
+  window.addEventListener("beforeinstallprompt", handleInstallPrompt);
+  window.addEventListener("appinstalled", handleAppInstalled);
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener("beforeinstallprompt", handleInstallPrompt);
+  window.removeEventListener("appinstalled", handleAppInstalled);
 });
 </script>
 
@@ -80,6 +115,16 @@ onMounted(() => {
           @click="router.push('/posts')"
         >
           커뮤니티
+        </button>
+        <button
+          v-if="canInstall"
+          class="nav-link nav-link--install"
+          type="button"
+          aria-label="서울잇다 앱 설치"
+          @click="installApp"
+        >
+          <span aria-hidden="true">＋</span>
+          앱 설치
         </button>
       </nav>
     </div>

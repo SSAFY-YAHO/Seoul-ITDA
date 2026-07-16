@@ -5,3 +5,11 @@ import App from './App.vue'
 import router from './router'
 
 createApp(App).use(router).mount('#app')
+
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {
+      // 서비스 워커 등록에 실패해도 일반 웹 사용은 계속 가능합니다.
+    })
+  })
+}
