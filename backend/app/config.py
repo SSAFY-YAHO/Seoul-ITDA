@@ -10,6 +10,19 @@ from dotenv import load_dotenv
 ROOT_DIR = Path(__file__).resolve().parents[2]
 load_dotenv(ROOT_DIR / '.env')
 
+CAPACITOR_ORIGINS = ('https://localhost', 'http://localhost')
+
+
+def _cors_origins() -> tuple[str, ...]:
+    configured = (
+        origin.strip()
+        for origin in os.getenv(
+            'CORS_ORIGINS',
+            'http://localhost:5173,http://127.0.0.1:5173',
+        ).split(',')
+    )
+    return tuple(dict.fromkeys(origin for origin in (*configured, *CAPACITOR_ORIGINS) if origin))
+
 
 def _resolve_database_url(raw_url: str) -> str:
     if not raw_url.startswith('sqlite:///'):
@@ -50,14 +63,7 @@ class Settings:
     chat_web_search_enabled: bool = os.getenv('CHAT_WEB_SEARCH_ENABLED', 'true').strip().lower() in {
         '1', 'true', 'yes', 'on'
     }
-    cors_origins: tuple[str, ...] = tuple(
-        origin.strip()
-        for origin in os.getenv(
-            'CORS_ORIGINS',
-            'http://localhost:5173,http://127.0.0.1:5173',
-        ).split(',')
-        if origin.strip()
-    )
+    cors_origins: tuple[str, ...] = _cors_origins()
 
 
 settings = Settings()

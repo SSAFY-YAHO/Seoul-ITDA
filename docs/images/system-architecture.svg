@@ -1,0 +1,182 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000" role="img" aria-labelledby="title desc">
+  <title id="title">서울잇다 시스템 아키텍처</title>
+  <desc id="desc">사용자 브라우저, Netlify Vue 프론트엔드, Render FastAPI 백엔드, Cloudinary, OpenAI API, SQLite와 서울 JSON 데이터의 연결 구조</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fbfaf3"/>
+      <stop offset="1" stop-color="#eef6e9"/>
+    </linearGradient>
+    <linearGradient id="front" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#e9f4df"/>
+      <stop offset="1" stop-color="#d7ead0"/>
+    </linearGradient>
+    <linearGradient id="back" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#e8f3ef"/>
+      <stop offset="1" stop-color="#d4e7df"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="#355846" flood-opacity="0.12"/>
+    </filter>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#4f7d63"/>
+    </marker>
+    <marker id="arrow-soft" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#94aa73"/>
+    </marker>
+    <style>
+      .title { font: 800 42px 'Pretendard','Noto Sans KR',Arial,sans-serif; fill:#294c3a; }
+      .subtitle { font: 500 18px 'Pretendard','Noto Sans KR',Arial,sans-serif; fill:#718078; }
+      .eyebrow { font: 800 14px 'Pretendard','Noto Sans KR',Arial,sans-serif; letter-spacing:2px; fill:#6a8d72; }
+      .card-title { font: 800 25px 'Pretendard','Noto Sans KR',Arial,sans-serif; fill:#294c3a; }
+      .card-sub { font: 700 14px 'Pretendard','Noto Sans KR',Arial,sans-serif; fill:#6c8073; }
+      .body { font: 600 16px 'Pretendard','Noto Sans KR',Arial,sans-serif; fill:#40584b; }
+      .small { font: 600 14px 'Pretendard','Noto Sans KR',Arial,sans-serif; fill:#63766b; }
+      .flow { font: 800 13px 'Pretendard','Noto Sans KR',Arial,sans-serif; fill:#4f7d63; }
+      .white-title { font: 800 25px 'Pretendard','Noto Sans KR',Arial,sans-serif; fill:#fff; }
+      .white-sub { font: 650 14px 'Pretendard','Noto Sans KR',Arial,sans-serif; fill:#e9f6ed; }
+    </style>
+  </defs>
+
+  <rect width="1600" height="1000" fill="url(#bg)"/>
+  <circle cx="1470" cy="90" r="150" fill="#f5df9e" opacity="0.23"/>
+  <circle cx="130" cy="890" r="180" fill="#b9ddcf" opacity="0.22"/>
+  <path d="M0 895 C160 845 270 940 430 890 S735 840 900 900 1200 950 1600 875 V1000 H0Z" fill="#dcebd2"/>
+  <path d="M0 936 C180 900 330 972 510 929 S850 898 1030 942 1360 966 1600 920 V1000 H0Z" fill="#c6dfc0" opacity="0.75"/>
+
+  <g transform="translate(72 58)">
+    <text class="eyebrow" x="0" y="0">SEOUL ITDA · SYSTEM VIEW</text>
+    <text class="title" x="0" y="58">서울잇다 시스템 아키텍처</text>
+    <text class="subtitle" x="0" y="92">배포 환경과 외부 서비스, 데이터 저장소가 어떻게 연결되는지 한눈에 보여줍니다.</text>
+  </g>
+
+  <!-- decorative clouds -->
+  <g fill="#fff" opacity="0.9">
+    <path d="M1180 82c0-18 15-33 34-33 13 0 24 7 30 18 5-5 13-8 21-8 17 0 30 12 32 28h-117c0-2 0-3 0-5z"/>
+    <path d="M160 173c0-13 11-24 25-24 10 0 18 5 22 13 4-4 9-6 15-6 12 0 22 9 23 21h-85z"/>
+  </g>
+
+  <!-- user -->
+  <g filter="url(#shadow)">
+    <rect x="70" y="350" width="250" height="250" rx="34" fill="#fffdf7" stroke="#d8e4d2" stroke-width="2"/>
+  </g>
+  <circle cx="195" cy="422" r="39" fill="#f3cf91"/>
+  <circle cx="195" cy="411" r="17" fill="#52705d"/>
+  <path d="M159 464c8-22 25-34 36-34s29 12 36 34v18h-72z" fill="#7eaa84"/>
+  <rect x="124" y="491" width="142" height="64" rx="12" fill="#edf3e8" stroke="#b8cdb9" stroke-width="2"/>
+  <rect x="141" y="505" width="108" height="32" rx="5" fill="#fff"/>
+  <text class="card-title" x="195" y="575" text-anchor="middle">사용자</text>
+  <text class="card-sub" x="195" y="598" text-anchor="middle">웹 · 모바일 브라우저</text>
+
+  <!-- frontend deployment -->
+  <g filter="url(#shadow)">
+    <rect x="410" y="245" width="350" height="340" rx="38" fill="url(#front)" stroke="#b8d2ae" stroke-width="2"/>
+  </g>
+  <rect x="442" y="274" width="112" height="30" rx="15" fill="#4c7a5d"/>
+  <text class="white-sub" x="498" y="295" text-anchor="middle">NETLIFY</text>
+  <text class="card-title" x="442" y="348">Vue 3 SPA</text>
+  <text class="card-sub" x="442" y="374">프론트엔드 · Vite 빌드</text>
+  <g>
+    <rect x="442" y="405" width="286" height="54" rx="16" fill="#fff" opacity="0.9"/>
+    <text class="body" x="465" y="438">홈 · 축제 캘린더 · 커뮤니티</text>
+    <rect x="442" y="473" width="137" height="68" rx="16" fill="#fff" opacity="0.9"/>
+    <text class="body" x="510" y="502" text-anchor="middle">AI 챗봇</text>
+    <text class="small" x="510" y="525" text-anchor="middle">대화 UI</text>
+    <rect x="591" y="473" width="137" height="68" rx="16" fill="#fff" opacity="0.9"/>
+    <text class="body" x="660" y="502" text-anchor="middle">API Client</text>
+    <text class="small" x="660" y="525" text-anchor="middle">fetch / JSON</text>
+  </g>
+
+  <!-- backend deployment -->
+  <g filter="url(#shadow)">
+    <rect x="850" y="245" width="350" height="340" rx="38" fill="url(#back)" stroke="#a9cbc0" stroke-width="2"/>
+  </g>
+  <rect x="882" y="274" width="104" height="30" rx="15" fill="#3e7467"/>
+  <text class="white-sub" x="934" y="295" text-anchor="middle">RENDER</text>
+  <text class="card-title" x="882" y="348">FastAPI</text>
+  <text class="card-sub" x="882" y="374">백엔드 · Python REST API</text>
+  <rect x="882" y="405" width="286" height="54" rx="16" fill="#fff" opacity="0.92"/>
+  <text class="body" x="1025" y="438" text-anchor="middle">/api/locations · festivals · posts</text>
+  <rect x="882" y="473" width="137" height="68" rx="16" fill="#fff" opacity="0.92"/>
+  <text class="body" x="951" y="502" text-anchor="middle">Chat Service</text>
+  <text class="small" x="951" y="525" text-anchor="middle">DB 우선 탐색</text>
+  <rect x="1031" y="473" width="137" height="68" rx="16" fill="#fff" opacity="0.92"/>
+  <text class="body" x="1100" y="502" text-anchor="middle">SQLAlchemy</text>
+  <text class="small" x="1100" y="525" text-anchor="middle">ORM · 세션</text>
+
+  <!-- external services -->
+  <g filter="url(#shadow)">
+    <rect x="1280" y="185" width="250" height="160" rx="30" fill="#426f5a"/>
+  </g>
+  <circle cx="1325" cy="230" r="20" fill="#8fc5a4"/>
+  <path d="M1315 230h20M1325 220v20" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
+  <text class="white-title" x="1360" y="238">OpenAI API</text>
+  <text class="white-sub" x="1310" y="278">일반 대화 · Responses API</text>
+  <text class="white-sub" x="1310" y="304">웹 검색 · 출처 반환</text>
+
+  <g filter="url(#shadow)">
+    <rect x="1280" y="400" width="250" height="160" rx="30" fill="#fff8e8" stroke="#dfc98f" stroke-width="2"/>
+  </g>
+  <ellipse cx="1330" cy="445" rx="25" ry="10" fill="#d49d50"/>
+  <path d="M1305 445v38c0 6 11 11 25 11s25-5 25-11v-38" fill="#efc77d" stroke="#d49d50" stroke-width="2"/>
+  <ellipse cx="1330" cy="483" rx="25" ry="10" fill="#e2b365"/>
+  <text class="card-title" x="1370" y="457">SQLite</text>
+  <text class="small" x="1310" y="520">장소 · 게시글 영속 데이터</text>
+
+  <g filter="url(#shadow)">
+    <rect x="1280" y="615" width="250" height="160" rx="30" fill="#f2f6e8" stroke="#c8d7a7" stroke-width="2"/>
+  </g>
+  <path d="M1308 649h45v60h-45z" fill="#fff" stroke="#8baa6d" stroke-width="2"/>
+  <path d="M1341 649l12 12h-12z" fill="#cfe0b4"/>
+  <text class="card-title" x="1370" y="669">서울 JSON</text>
+  <text class="small" x="1310" y="714">관광지 · 축제 초기 데이터</text>
+  <text class="small" x="1310" y="738">서버 시작 시 적재</text>
+
+  <!-- cloudinary -->
+  <g filter="url(#shadow)">
+    <rect x="410" y="670" width="350" height="130" rx="30" fill="#eef5fb" stroke="#b7d0e2" stroke-width="2"/>
+  </g>
+  <circle cx="462" cy="722" r="25" fill="#5c93b7"/>
+  <path d="M449 727c1-12 8-20 18-20 9 0 15 6 17 14 8 0 14 5 14 12h-48c-1-2-1-4-1-6z" fill="#fff"/>
+  <text class="card-title" x="505" y="716">Cloudinary</text>
+  <text class="small" x="505" y="744">커뮤니티 이미지 직접 업로드</text>
+  <text class="small" x="505" y="768">secure_url을 게시글에 저장</text>
+
+  <!-- flows -->
+  <path d="M320 452 C350 452 372 415 410 415" fill="none" stroke="#4f7d63" stroke-width="4" marker-end="url(#arrow)"/>
+  <path d="M410 500 C372 500 350 540 320 540" fill="none" stroke="#4f7d63" stroke-width="4" marker-end="url(#arrow)"/>
+  <text class="flow" x="365" y="396" text-anchor="middle">HTTPS</text>
+  <text class="flow" x="365" y="562" text-anchor="middle">화면 응답</text>
+
+  <path d="M760 407 H850" fill="none" stroke="#4f7d63" stroke-width="4" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
+  <text class="flow" x="805" y="388" text-anchor="middle">REST · JSON</text>
+
+  <path d="M1200 350 C1235 350 1240 265 1280 265" fill="none" stroke="#4f7d63" stroke-width="4" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
+  <text class="flow" x="1242" y="325" text-anchor="middle">AI 요청</text>
+
+  <path d="M1200 480 H1280" fill="none" stroke="#4f7d63" stroke-width="4" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
+  <text class="flow" x="1240" y="463" text-anchor="middle">CRUD</text>
+
+  <path d="M1280 695 C1210 695 1200 570 1132 570" fill="none" stroke="#94aa73" stroke-width="4" stroke-dasharray="9 8" marker-end="url(#arrow-soft)"/>
+  <text class="flow" x="1215" y="665" text-anchor="middle">초기 적재</text>
+
+  <path d="M585 585 V670" fill="none" stroke="#5c93b7" stroke-width="4" stroke-dasharray="9 8" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
+  <text class="flow" x="605" y="632">이미지</text>
+
+  <!-- footer legend -->
+  <g transform="translate(820 855)">
+    <rect x="0" y="0" width="700" height="70" rx="22" fill="#fff" opacity="0.78"/>
+    <line x1="30" y1="35" x2="90" y2="35" stroke="#4f7d63" stroke-width="4" marker-end="url(#arrow)"/>
+    <text class="small" x="105" y="40">실시간 요청·응답</text>
+    <line x1="285" y1="35" x2="345" y2="35" stroke="#94aa73" stroke-width="4" stroke-dasharray="9 8" marker-end="url(#arrow-soft)"/>
+    <text class="small" x="360" y="40">초기 적재·직접 업로드</text>
+  </g>
+
+  <!-- tiny trees -->
+  <g transform="translate(70 805)">
+    <rect x="20" y="65" width="12" height="44" rx="5" fill="#9a7448"/>
+    <circle cx="26" cy="42" r="30" fill="#6f9f72"/>
+    <circle cx="48" cy="58" r="24" fill="#8db789"/>
+    <rect x="112" y="72" width="10" height="37" rx="4" fill="#9a7448"/>
+    <path d="M117 20l-36 68h72z" fill="#5f916a"/>
+  </g>
+</svg>

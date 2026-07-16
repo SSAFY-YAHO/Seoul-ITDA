@@ -5,6 +5,7 @@ import PostDetailView from '../views/PostDetailView.vue'
 import PostCreateView from '../views/PostCreateView.vue'
 import PostEditView from '../views/PostEditView.vue'
 import FestivalCalendarView from '../views/FestivalCalendarView.vue'
+import DownloadView from '../views/DownloadView.vue'
 import NotFoundView from '../views/NotFoundView.vue'
 
 const router = createRouter({
@@ -39,6 +40,11 @@ const router = createRouter({
       path: '/festivals',
       name: 'festivals',
       component: FestivalCalendarView,
+    },
+    {
+      path: '/download',
+      name: 'download',
+      component: DownloadView,
     },
     {
       path: '/:pathMatch(.*)*',

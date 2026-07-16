@@ -1,4 +1,5 @@
 .env
+.android-tools/
 .env.*
 !.env.example
 env

@@ -308,3 +308,6 @@
 - 웹 출처 URL의 `utm_*` 추적 파라미터는 제거합니다.
 - 웹 검색은 `CHAT_WEB_SEARCH_ENABLED=true`, 유효한 `OPENAI_API_KEY`, 웹 검색 지원 모델이 모두 필요합니다.
 - 내부 DB 결과가 한 건이라도 있으면 웹 검색을 호출하지 않습니다.
+# Android 앱 CORS
+
+Capacitor Android 앱은 `https://localhost` 출처에서 API를 호출한다. 모든 `/api/*` 엔드포인트는 이 출처와 `http://localhost` 호환 출처의 CORS 요청을 허용한다.

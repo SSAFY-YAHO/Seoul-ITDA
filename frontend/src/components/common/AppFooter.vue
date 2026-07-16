@@ -1,5 +1,8 @@
 <script setup>
 import { RouterLink } from "vue-router";
+import { Capacitor } from "@capacitor/core";
+
+const isNativeApp = Capacitor.isNativePlatform();
 
 const developers = (import.meta.env.VITE_DEVELOPERS || "")
   .split(",")
@@ -21,6 +24,7 @@ const developers = (import.meta.env.VITE_DEVELOPERS || "")
           <li><RouterLink to="/">홈</RouterLink></li>
           <li><RouterLink to="/festivals">축제 캘린더</RouterLink></li>
           <li><RouterLink to="/posts">커뮤니티</RouterLink></li>
+          <li v-if="!isNativeApp"><RouterLink to="/download">Android 앱</RouterLink></li>
         </ul>
       </nav>
 
