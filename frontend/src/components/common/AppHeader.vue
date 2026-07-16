@@ -3,6 +3,7 @@ import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import brandMark from "../../assets/mascot.png";
 import { fetchHealth } from "../../api/health";
+import { Capacitor } from "@capacitor/core";
 
 const route = useRoute();
 const router = useRouter();
@@ -10,6 +11,7 @@ const healthStatus = ref("checking");
 const healthEnvironment = ref("");
 const installPrompt = ref(null);
 const isInstalled = ref(false);
+const isNativeApp = Capacitor.isNativePlatform();
 
 const healthLabel = computed(() => {
   if (healthStatus.value === "ok") return "API 정상";
@@ -17,7 +19,7 @@ const healthLabel = computed(() => {
   return "API 확인 중";
 });
 
-const canInstall = computed(() => Boolean(installPrompt.value) && !isInstalled.value);
+const canInstall = computed(() => !isNativeApp && Boolean(installPrompt.value) && !isInstalled.value);
 
 function isActive(path) {
   return route.path === path;
@@ -115,6 +117,15 @@ onBeforeUnmount(() => {
           @click="router.push('/posts')"
         >
           커뮤니티
+        </button>
+        <button
+          v-if="!isNativeApp"
+          class="nav-link"
+          type="button"
+          :class="{ 'nav-link--active': isActive('/download') }"
+          @click="router.push('/download')"
+        >
+          Android 앱
         </button>
         <button
           v-if="canInstall"

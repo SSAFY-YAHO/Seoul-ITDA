@@ -73,6 +73,11 @@ search-capable model separately with `OPENAI_WEB_SEARCH_MODEL`.
 PWA 주요 파일은 `frontend/public/manifest.webmanifest`, `frontend/public/sw.js`,
 `frontend/public/icons/`에 있습니다.
 
+## Android APK
+
+기존 웹/PWA와 별도로 Capacitor 기반 Android 앱을 제공합니다. Android 빌드와 APK 웹 배포 방법은
+`docs/mobile/android-distribution.md`를 참고하세요. iOS 프로젝트는 포함하지 않습니다.
+
 ## 기본 엔드포인트
 
 - `GET /` : 앱 메타 정보

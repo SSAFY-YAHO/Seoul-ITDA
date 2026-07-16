@@ -121,3 +121,8 @@
 - 원인: PowerShell은 변수명을 대소문자 구분하지 않아 응답 변수 `$home`이 읽기 전용 예약 변수 `$HOME`과 충돌
 - 조치: 응답 변수명을 `$homeResponse`로 변경하고 프로덕션 미리보기 자산을 다시 요청
 - 상태: 홈·매니페스트·서비스 워커·아이콘 모두 HTTP 200 확인
+# Android 앱에서 API 연결 실패
+
+- 원인: Capacitor WebView의 `Origin`은 `https://localhost`이며, Render CORS 허용 목록에 없으면 브라우저가 응답을 차단한다.
+- 조치: 백엔드가 `https://localhost`와 `http://localhost`를 항상 허용하도록 설정하고 Render 백엔드를 재배포한다.
+- 확인: `Origin: https://localhost` GET 응답과 OPTIONS preflight 응답에 `access-control-allow-origin` 헤더가 포함되어야 한다.

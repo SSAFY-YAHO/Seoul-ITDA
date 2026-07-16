@@ -162,3 +162,8 @@
   - 프론트엔드 프로덕션 빌드 통과
   - 미리보기 서버에서 홈·매니페스트·서비스 워커·아이콘 HTTP 200 확인
   - 매니페스트 및 Apple Touch 아이콘 링크, 180/192/512px 이미지 크기 확인
+# Android 앱 CORS 허용
+
+- Capacitor Android WebView의 기본 출처인 `https://localhost`와 호환 출처 `http://localhost`를 백엔드 기본 허용 목록에 추가했다.
+- Render의 `CORS_ORIGINS` 환경변수에 값이 누락되어도 Android 앱의 API 요청과 preflight 요청이 허용된다.
+- GET 및 OPTIONS 요청에 대한 자동 테스트를 추가했다.
